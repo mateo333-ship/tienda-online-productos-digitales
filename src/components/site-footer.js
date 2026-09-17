@@ -5,7 +5,7 @@ export function SiteFooter() {
     <footer className="mt-24 border-t border-[var(--border)] bg-[var(--surface)]">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 sm:grid-cols-3">
         <div>
-          <p className="text-lg font-semibold tracking-tight">Terra Casa</p>
+          <p className="text-lg font-semibold tracking-tight">The God Supplier</p>
           <p className="mt-3 max-w-xs text-sm text-[var(--ink-soft)]">
             Objetos sencillos para una casa en calma. Hechos con cuidado, pensados para durar.
           </p>
@@ -29,7 +29,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-[var(--border)] px-6 py-6 text-center text-xs text-[var(--ink-soft)]">
-        © {new Date().getFullYear()} Terra Casa. Todos los derechos reservados.
+        © {new Date().getFullYear()} The God Supplier. Todos los derechos reservados.
       </div>
     </footer>
   );

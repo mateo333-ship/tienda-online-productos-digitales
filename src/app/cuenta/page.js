@@ -5,7 +5,7 @@ import { listOrdersForUser } from "@/server/auth/orders-repo";
 import { formatPrice } from "@/lib/utils";
 import { LogoutButton } from "./logout-button";
 
-export const metadata = { title: "Mi cuenta — Terra Casa" };
+export const metadata = { title: "Mi cuenta — The God Supplier" };
 
 export default async function CuentaPage() {
   // Comprobación de sesión en el servidor: si no hay sesión válida, ni

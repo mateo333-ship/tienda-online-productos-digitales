@@ -50,7 +50,7 @@ export default function HomePage() {
           Objetos sencillos, hechos para quedarse.
         </h1>
         <p className="max-w-xl text-lg text-[var(--ink-soft)]">
-          Terra Casa reúne velas, cerámica y textil de pequeños talleres, para una casa con
+          The God Supplier reúne velas, cerámica y textil de pequeños talleres, para una casa con
           menos ruido y más carácter.
         </p>
         <div className="flex flex-wrap items-center gap-4 pt-2">

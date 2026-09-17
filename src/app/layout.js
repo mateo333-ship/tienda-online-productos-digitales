@@ -14,7 +14,7 @@ import { SiteFooter } from "@/components/site-footer";
 // línea en globals.css (--font-sans / --font-serif).
 
 export const metadata = {
-  title: "Terra Casa — Objetos sencillos para el hogar",
+  title: "The God Supplier — Objetos sencillos para el hogar",
   description:
     "Tienda online de objetos de casa hechos con cuidado: velas, cerámica, textil y aromas.",
 };

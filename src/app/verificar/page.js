@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { VerificarForm } from "./verificar-form";
 
-export const metadata = { title: "Verifica tu email — Terra Casa" };
+export const metadata = { title: "Verifica tu email — The God Supplier" };
 
 export default function VerificarPage() {
   return (

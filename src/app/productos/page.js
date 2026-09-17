@@ -1,7 +1,7 @@
 import { getAllProducts } from "@/lib/products";
 import { ProductCard } from "@/components/product-card";
 
-export const metadata = { title: "Catálogo — Terra Casa" };
+export const metadata = { title: "Catálogo — The God Supplier" };
 
 export default function CatalogoPage() {
   const products = getAllProducts();

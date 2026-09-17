@@ -4,29 +4,73 @@ import "server-only";
  * ------------------------------------------------------------------
  *  Envío del código de verificación por email
  * ------------------------------------------------------------------
- * Usa Resend (resend.com) a través de su API REST, sin depender de
- * ningún paquete adicional (igual que hacemos con Firebase): solo hace
- * falta una API key.
+ * Dos proveedores posibles, elegidos automáticamente según qué
+ * variables de entorno existan (ninguno necesita un paquete adicional,
+ * ambos hablan por su API REST con `fetch`):
  *
- * Detección automática, igual que con la base de datos:
- *   - Si existe RESEND_API_KEY: se envía un email real con el código.
- *   - Si no existe (normalmente en tu ordenador, en desarrollo): el
- *     código se escribe en la consola del servidor y además se
- *     devuelve en pantalla ("modo demo"), como hasta ahora.
+ *   1. Brevo (BREVO_API_KEY) — RECOMENDADO si no tienes un dominio
+ *      propio: deja enviar a cualquier destinatario verificando solo
+ *      una dirección de email como remitente (no un dominio entero).
+ *      300 emails/día gratis.
+ *   2. Resend (RESEND_API_KEY) — mejor entrega si en el futuro
+ *      verificas un dominio propio, pero mientras no lo hagas solo
+ *      puede enviar a la dirección con la que creaste la cuenta.
  *
- * Cómo conseguir la API key: ver README.md, sección "Enviar los
- * códigos de verificación por email de verdad (Resend)".
+ * Si no hay ninguna de las dos, o si el envío real falla por lo que
+ * sea, el código se escribe en la consola del servidor como red de
+ * seguridad ("modo demo"), y nunca se deja caer todo el registro por
+ * un fallo del proveedor de email.
+ *
+ * Cómo conseguir las claves: ver README.md, sección "Enviar los
+ * códigos de verificación por email de verdad".
  * ------------------------------------------------------------------
  */
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const BREVO_FROM_EMAIL = process.env.BREVO_FROM_EMAIL;
+const BREVO_FROM_NAME = process.env.BREVO_FROM_NAME || "The God Supplier";
 
-// Mientras no verifiques tu propio dominio en Resend, solo puedes enviar
-// emails con esta dirección de remitente, y solo a la dirección de email
-// con la que creaste tu cuenta de Resend. En cuanto verifiques un dominio
-// propio (Resend te lo guía paso a paso), cambia FROM_EMAIL por algo como
-// "Terra Casa <codigos@tudominio.com>" mediante la variable RESEND_FROM_EMAIL.
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Terra Casa <onboarding@resend.dev>";
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "The God Supplier <onboarding@resend.dev>";
+
+function verificationEmailHtml(code) {
+  return `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2 style="margin-bottom: 8px;">Verifica tu email</h2>
+      <p>Tu código de verificación es:</p>
+      <p style="font-size: 32px; font-weight: bold; letter-spacing: 6px;">${code}</p>
+      <p style="color: #666; font-size: 14px;">Caduca en 10 minutos. Si no has sido tú, ignora este mensaje.</p>
+    </div>
+  `;
+}
+
+async function sendWithBrevo(email, code) {
+  if (!BREVO_FROM_EMAIL) {
+    throw new Error(
+      "Falta BREVO_FROM_EMAIL: pon aquí la dirección que verificaste como remitente en Brevo."
+    );
+  }
+
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "api-key": BREVO_API_KEY,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: BREVO_FROM_NAME, email: BREVO_FROM_EMAIL },
+      to: [{ email }],
+      subject: "Tu código de verificación",
+      htmlContent: verificationEmailHtml(code),
+    }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`No se ha podido enviar el email por Brevo (HTTP ${res.status}). ${detail}`);
+  }
+}
 
 async function sendWithResend(email, code) {
   const res = await fetch("https://api.resend.com/emails", {
@@ -36,33 +80,41 @@ async function sendWithResend(email, code) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: FROM_EMAIL,
+      from: RESEND_FROM_EMAIL,
       to: [email],
       subject: "Tu código de verificación",
-      html: `
-        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="margin-bottom: 8px;">Verifica tu email</h2>
-          <p>Tu código de verificación es:</p>
-          <p style="font-size: 32px; font-weight: bold; letter-spacing: 6px;">${code}</p>
-          <p style="color: #666; font-size: 14px;">Caduca en 10 minutos. Si no has sido tú, ignora este mensaje.</p>
-        </div>
-      `,
+      html: verificationEmailHtml(code),
     }),
   });
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new Error(`No se ha podido enviar el email de verificación (HTTP ${res.status}). ${detail}`);
+    throw new Error(`No se ha podido enviar el email por Resend (HTTP ${res.status}). ${detail}`);
   }
 }
 
 export async function sendVerificationEmail(email, code) {
-  if (RESEND_API_KEY) {
-    await sendWithResend(email, code);
-    return;
+  // Un fallo del proveedor de email (clave inválida, límite alcanzado,
+  // restricción de destinatario...) NUNCA debe impedir que la cuenta se
+  // cree. Si el envío real falla, lo dejamos escrito en los Logs junto
+  // con el código, como red de seguridad, y seguimos.
+  if (BREVO_API_KEY) {
+    try {
+      await sendWithBrevo(email, code);
+      return;
+    } catch (err) {
+      console.error("[MAIL] No se ha podido enviar por Brevo, sigo en modo demo:", err.message);
+    }
+  } else if (RESEND_API_KEY) {
+    try {
+      await sendWithResend(email, code);
+      return;
+    } catch (err) {
+      console.error("[MAIL] No se ha podido enviar por Resend, sigo en modo demo:", err.message);
+    }
   }
 
-  // Modo demo: sin API key, seguimos como hasta ahora para no romper el
-  // desarrollo local.
+  // Modo demo: sin ninguna clave configurada, o si el envío real ha
+  // fallado, el código queda aquí como red de seguridad.
   console.log(`[MAIL DEMO] Código de verificación para ${email}: ${code}`);
 }

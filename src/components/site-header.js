@@ -21,7 +21,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="text-lg font-semibold tracking-tight">
-          Terra&nbsp;<span className="text-[var(--ink-soft)] font-normal">Casa</span>
+          The God&nbsp;<span className="text-[var(--ink-soft)] font-normal">Supplier</span>
         </Link>
 
         <nav className="hidden items-center gap-8 text-sm font-medium text-[var(--ink-soft)] md:flex">

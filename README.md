@@ -1,4 +1,4 @@
-# Terra Casa — tienda online
+# The God Supplier — tienda online
 
 Tienda de ejemplo construida con Next.js (React) + Tailwind CSS. Incluye
 catálogo, carrito, registro con verificación de email por código,
@@ -92,47 +92,68 @@ que en tu ordenador — solo que ahora los datos se guardan en tu
 Realtime Database, y puedes verlos en tiempo real desde la propia
 consola de Firebase (pestaña Realtime Database), bajo el nodo `tienda`.
 
-### 3. Enviar los códigos de verificación por email de verdad (Resend)
+### 3. Enviar los códigos de verificación por email de verdad
 
 Sin esto, el código de verificación no llega a ningún sitio en
-producción (solo se escribe en los Logs de Vercel). Para que llegue de
-verdad a la bandeja de entrada de tus clientes:
+producción (solo se escribe en los Logs de Vercel). Hay dos formas de
+conseguirlo — elige según si tienes o no un dominio propio.
 
-1. Crea una cuenta gratuita en [resend.com](https://resend.com) (el
-   plan gratis incluye 3.000 emails al mes, de sobra para empezar).
-2. En el panel de Resend, ve a **API Keys** → **Create API Key** y
-   copia la clave que te da (empieza por `re_`).
-3. En Vercel: tu proyecto → **Settings** → **Environment Variables** →
-   añade `RESEND_API_KEY` con esa clave.
-4. Haz un **redeploy**.
+#### Opción A: Brevo — recomendada si NO tienes un dominio propio
 
-Con solo esto ya puedes probarlo, pero con una limitación importante:
-mientras no verifiques un dominio propio en Resend, **solo puedes
-enviar emails a la dirección con la que creaste tu cuenta de Resend**
-(es una restricción de seguridad de Resend, no nuestra, pensada para
-evitar spam desde cuentas nuevas). Para poder enviar códigos a
-cualquier cliente:
+Brevo deja enviar a **cualquier destinatario** verificando solo una
+dirección de email como remitente, sin necesidad de un dominio.
+Gratis hasta 300 emails al día.
 
-5. En Resend, ve a **Domains** → **Add Domain**, escribe un dominio
-   tuyo (por ejemplo `terracasa.com`) y añade los registros DNS que te
-   indique en el sitio donde compraste ese dominio. Suele tardar entre
-   unos minutos y un par de horas en verificarse.
-6. Una vez verificado, en Vercel añade también `RESEND_FROM_EMAIL` con
-   un valor como `Terra Casa <codigos@terracasa.com>` (usando tu
-   dominio ya verificado), y redeploy otra vez.
+1. Crea una cuenta gratuita en [brevo.com](https://www.brevo.com).
+2. En el panel, ve a la sección de remitentes (**Senders, Domains &
+   Dedicated IPs** → **Senders**) y añade como remitente la dirección
+   de email desde la que quieres que salgan los códigos (puede ser tu
+   propio Gmail, por ejemplo). Brevo te manda un email de confirmación
+   a esa dirección — ábrelo y confirma.
+3. Ve a **SMTP & API** → **API Keys** → **Generate a new API key**, y
+   cópiala.
+4. En Vercel: tu proyecto → **Settings** → **Environment Variables** →
+   añade `BREVO_API_KEY` con esa clave, y `BREVO_FROM_EMAIL` con la
+   dirección que verificaste en el paso 2.
+5. Haz un **redeploy**.
 
-Si no tienes todavía un dominio propio, no pasa nada: puedes seguir
-usando la tienda igualmente, simplemente los emails de verificación
-solo llegarán a tu propia cuenta mientras pruebas.
+Con esto ya deberían llegar los códigos a cualquier cliente. Un
+detalle honesto: sin un dominio propio autenticado, la entrega a
+Gmail y Yahoo puede ser algo menos fiable que con uno (son requisitos
+que han ido imponiendo esos proveedores), pero para el volumen de una
+tienda que empieza funciona bien en la práctica.
+
+#### Opción B: Resend — si en el futuro tienes (o compras) un dominio propio
+
+Resend da mejor entrega, pero mientras no verifiques un dominio
+propio en su panel, **solo puede enviar a la dirección con la que
+creaste tu cuenta de Resend** (restricción suya, para evitar spam
+desde cuentas nuevas) — no sirve para llegar a clientes de verdad
+hasta ese paso.
+
+1. Crea una cuenta gratuita en [resend.com](https://resend.com).
+2. **API Keys** → **Create API Key** → copia la clave (empieza por `re_`).
+3. En Vercel, añade `RESEND_API_KEY` con esa clave.
+4. Para que llegue a cualquier cliente: **Domains** → **Add Domain**,
+   añade los registros DNS que te indique en el sitio donde compraste
+   el dominio, espera a que se verifique, y añade también
+   `RESEND_FROM_EMAIL` en Vercel (por ejemplo
+   `The God Supplier <codigos@thegodsupplier.com>`).
+5. Redeploy.
+
+Si defines `BREVO_API_KEY`, se usa Brevo y esta se ignora — no hace
+falta elegir una sola para siempre, puedes usar Brevo ahora y cambiar
+a Resend más adelante si compras un dominio.
 
 Si algo sigue fallando: en Vercel, pestaña **Logs** de tu proyecto,
 verás el error real (todas las rutas de la API atrapan cualquier fallo
 inesperado y lo escriben ahí, en vez de dejar que el navegador reciba
-una respuesta vacía).
+una respuesta vacía) — y aunque el envío falle, la cuenta se sigue
+creando igualmente, con el código como red de seguridad en esos Logs.
 
-En tu ordenador no tienes que hacer nada de esto: si no existen esas
-variables de Redis, la web sigue usando ficheros JSON locales
-automáticamente, como hasta ahora.
+En tu ordenador no tienes que hacer nada de esto: si no existe
+ninguna de esas variables, la web sigue usando el modo demo (código
+en pantalla) automáticamente, como hasta ahora.
 
 ## Qué hay construido y qué es todavía una maqueta
 
@@ -144,7 +165,7 @@ producción. Aquí está la lista completa, sin sorpresas:
 |---|---|---|
 | Catálogo de productos | Datos de ejemplo en `src/lib/products.js` | Conectar una base de datos (ver más abajo) |
 | Cuentas de cliente, contraseñas, sesiones | **Real y funcional**: contraseñas con hash bcrypt, sesión cifrada, verificación por email | Ninguna, esto ya está bien hecho — solo falta desplegar con HTTPS |
-| Envío del código de verificación | **Real si configuras `RESEND_API_KEY`** (ver "Poner la tienda en producción" más arriba); si no, se escribe en la consola del servidor y se muestra en pantalla solo en desarrollo | Verificar un dominio propio en Resend para poder enviar a cualquier cliente, no solo a tu propia cuenta |
+| Envío del código de verificación | **Real y a cualquier cliente si configuras `BREVO_API_KEY`** (ver "Poner la tienda en producción" más arriba, no hace falta dominio propio); si no, se escribe en la consola del servidor y se muestra en pantalla solo en desarrollo | Nada obligatorio — opcionalmente, un dominio propio verificado (en Brevo o Resend) mejora la entrega |
 | Guardado de usuarios y pedidos | Ficheros JSON en local; en Vercel usa Firebase Realtime Database si configuras las variables de entorno (ver "Poner la tienda en producción" más arriba) | Puedes seguir así, o migrar a otra base de datos más adelante — el código ya está organizado para que ese cambio sea pequeño (ver abajo) |
 | Pago | No implementado — "confirmar pedido" solo guarda el pedido | Conectar una pasarela de pago (Stripe, Redsys...) |
 

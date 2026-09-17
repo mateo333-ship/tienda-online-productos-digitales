@@ -10,7 +10,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const product = getProductBySlug(slug);
-  return { title: product ? `${product.name} — Terra Casa` : "Producto no encontrado" };
+  return { title: product ? `${product.name} — The God Supplier` : "Producto no encontrado" };
 }
 
 export default async function ProductoPage({ params }) {
