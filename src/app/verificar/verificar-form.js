@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { OtpInput } from "@/components/otp-input";
 import { Button } from "@/components/ui/button";
+import { useLoading } from "@/components/loading-overlay";
+import { useSession } from "@/components/session-provider";
 
 export function VerificarForm() {
   const params = useSearchParams();
@@ -14,21 +16,26 @@ export function VerificarForm() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { withLoading } = useLoading();
+  const { setUser } = useSession();
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code }),
+      await withLoading(async () => {
+        const res = await fetch("/api/auth/verify-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, code }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Código incorrecto.");
+        setUser(data.user);
+        router.push("/cuenta");
+        router.refresh();
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Código incorrecto.");
-      router.push("/cuenta");
-      router.refresh();
     } catch (err) {
       setError(err.message);
     } finally {

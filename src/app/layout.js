@@ -1,5 +1,7 @@
 import "./globals.css";
 import { CartProvider } from "@/components/cart-provider";
+import { LoadingProvider } from "@/components/loading-overlay";
+import { SessionProvider } from "@/components/session-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 
@@ -21,11 +23,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es" className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans">
-        <CartProvider>
-          <SiteHeader />
-          <main className="flex-1">{children}</main>
-          <SiteFooter />
-        </CartProvider>
+        <LoadingProvider>
+          <SessionProvider>
+            <CartProvider>
+              <SiteHeader />
+              <main className="flex-1">{children}</main>
+              <SiteFooter />
+            </CartProvider>
+          </SessionProvider>
+        </LoadingProvider>
       </body>
     </html>
   );

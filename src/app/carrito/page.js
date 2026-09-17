@@ -4,13 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart-provider";
-import { useSessionUser } from "@/components/use-session-user";
+import { useSession } from "@/components/session-provider";
+import { useLoading } from "@/components/loading-overlay";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 
 export default function CarritoPage() {
   const { items, updateQuantity, removeItem, total, clearCart, ready } = useCart();
-  const user = useSessionUser();
+  const { user } = useSession();
+  const { withLoading } = useLoading();
   const router = useRouter();
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
@@ -23,15 +25,17 @@ export default function CarritoPage() {
     setPlacing(true);
     setError("");
     try {
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
+      await withLoading(async () => {
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "No se ha podido crear el pedido.");
+        clearCart();
+        router.push("/cuenta");
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "No se ha podido crear el pedido.");
-      clearCart();
-      router.push("/cuenta");
     } catch (err) {
       setError(err.message);
     } finally {

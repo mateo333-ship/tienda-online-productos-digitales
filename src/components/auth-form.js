@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useLoading } from "./loading-overlay";
+import { useSession } from "./session-provider";
 
 /**
  * Formulario de inicio de sesión / registro.
@@ -16,6 +18,8 @@ export function AuthForm({ mode = "login" }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { withLoading } = useLoading();
+  const { setUser } = useSession();
 
   function update(field) {
     return (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -27,30 +31,35 @@ export function AuthForm({ mode = "login" }) {
     setLoading(true);
 
     try {
-      if (isRegister) {
-        const res = await fetch("/api/auth/register", {
+      await withLoading(async () => {
+        if (isRegister) {
+          const res = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(form),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "No se ha podido completar el registro.");
+
+          const params = new URLSearchParams({ email: form.email });
+          if (data.devCode) params.set("devCode", data.devCode);
+          router.push(`/verificar?${params.toString()}`);
+          return;
+        }
+
+        const res = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
+          body: JSON.stringify({ email: form.email, password: form.password }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "No se ha podido completar el registro.");
-
-        const params = new URLSearchParams({ email: form.email });
-        if (data.devCode) params.set("devCode", data.devCode);
-        router.push(`/verificar?${params.toString()}`);
-        return;
-      }
-
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, password: form.password }),
+        if (!res.ok) throw new Error(data.error || "No se ha podido iniciar sesión.");
+        // Actualizamos la sesión al instante (sin esperar a recargar nada),
+        // así la cabecera ya dice "Hola, {nombre}" en la siguiente página.
+        setUser(data.user);
+        router.push("/cuenta");
+        router.refresh();
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "No se ha podido iniciar sesión.");
-      router.push("/cuenta");
-      router.refresh();
     } catch (err) {
       setError(err.message);
     } finally {

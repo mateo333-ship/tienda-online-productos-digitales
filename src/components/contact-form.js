@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLoading } from "./loading-overlay";
 
 /**
  * Formulario de contacto. Maquetación: "Uiverse.io by themrsami",
@@ -10,6 +11,7 @@ export function ContactForm() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState("idle"); // idle | loading | done | error
   const [error, setError] = useState("");
+  const { withLoading } = useLoading();
 
   function update(field) {
     return (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -20,15 +22,17 @@ export function ContactForm() {
     setStatus("loading");
     setError("");
     try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+      await withLoading(async () => {
+        const res = await fetch("/api/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "No se ha podido enviar el mensaje.");
+        setStatus("done");
+        setForm({ name: "", email: "", message: "" });
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "No se ha podido enviar el mensaje.");
-      setStatus("done");
-      setForm({ name: "", email: "", message: "" });
     } catch (err) {
       setError(err.message);
       setStatus("error");

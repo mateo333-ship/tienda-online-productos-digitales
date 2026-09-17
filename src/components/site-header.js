@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "./cart-provider";
-import { useSessionUser } from "./use-session-user";
+import { useSession } from "./session-provider";
 import { Button } from "./ui/button";
 
 const NAV = [
@@ -14,7 +14,7 @@ const NAV = [
 
 export function SiteHeader() {
   const { count } = useCart();
-  const user = useSessionUser();
+  const { user } = useSession();
   const [open, setOpen] = useState(false);
 
   return (
