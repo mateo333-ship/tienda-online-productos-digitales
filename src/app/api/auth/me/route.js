@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { readSessionToken, SESSION_COOKIE_NAME } from "@/server/auth/session";
 import { findUserById, publicUser } from "@/server/auth/users-repo";
+import { safeRoute } from "@/server/http/safe-route";
 
-export async function GET() {
+export const GET = safeRoute(async () => {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   const userId = await readSessionToken(token);
@@ -11,4 +12,4 @@ export async function GET() {
 
   const user = await findUserById(userId);
   return NextResponse.json({ user: publicUser(user) });
-}
+});

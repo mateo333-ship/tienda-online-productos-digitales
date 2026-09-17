@@ -11,13 +11,14 @@ import {
 import { createSessionToken, SESSION_COOKIE_NAME, sessionCookieOptions } from "@/server/auth/session";
 import { checkRateLimit } from "@/server/auth/rate-limit";
 import { publicUser } from "@/server/auth/users-repo";
+import { safeRoute } from "@/server/http/safe-route";
 
 const schema = z.object({
   email: z.string().trim().toLowerCase().email(),
   code: z.string().trim().length(6),
 });
 
-export async function POST(req) {
+export const POST = safeRoute(async (req) => {
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
@@ -67,4 +68,4 @@ export async function POST(req) {
   const res = NextResponse.json({ ok: true, user: publicUser(user) });
   res.cookies.set(SESSION_COOKIE_NAME, token, sessionCookieOptions());
   return res;
-}
+});

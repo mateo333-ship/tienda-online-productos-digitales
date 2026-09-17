@@ -37,14 +37,14 @@ export function VerificarForm() {
   }
 
   return (
-    <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-white p-8 text-center">
+    <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 text-center">
       <h1 className="font-serif text-2xl">Revisa tu email</h1>
       <p className="mt-2 text-sm text-[var(--ink-soft)]">
         Hemos enviado un código de 6 dígitos a <strong>{email}</strong>.
       </p>
 
       {devCode && (
-        <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
           Modo demo (sin proveedor de email conectado todavía): tu código es{" "}
           <strong>{devCode}</strong>.
         </p>
@@ -52,7 +52,7 @@ export function VerificarForm() {
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-6">
         <OtpInput value={code} onChange={setCode} />
-        {error && <p className="text-sm text-rose-600">{error}</p>}
+        {error && <p className="text-sm text-rose-400">{error}</p>}
         <Button type="submit" disabled={code.length !== 6 || loading} className="w-full">
           {loading ? "Comprobando…" : "Verificar"}
         </Button>

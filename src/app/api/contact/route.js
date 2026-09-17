@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { readJsonStore, writeJsonStore } from "@/server/data/store";
 import { checkRateLimit } from "@/server/auth/rate-limit";
+import { safeRoute } from "@/server/http/safe-route";
 
 const schema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -13,7 +14,7 @@ function clientKey(req) {
   return req.headers.get("x-forwarded-for") ?? "local";
 }
 
-export async function POST(req) {
+export const POST = safeRoute(async (req) => {
   const limit = checkRateLimit(`contact:${clientKey(req)}`, { max: 5, windowMs: 15 * 60 * 1000 });
   if (!limit.allowed) {
     return NextResponse.json({ error: "Demasiados mensajes. Inténtalo más tarde." }, { status: 429 });
@@ -34,4 +35,4 @@ export async function POST(req) {
   console.log(`[CONTACTO] Nuevo mensaje de ${parsed.data.email}`);
 
   return NextResponse.json({ ok: true });
-}
+});

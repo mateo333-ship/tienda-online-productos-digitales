@@ -21,7 +21,7 @@ export default async function ProductoPage({ params }) {
   return (
     <div className="mx-auto max-w-6xl px-6 py-16">
       <div className="grid gap-12 lg:grid-cols-2">
-        <div className={`aspect-square rounded-3xl bg-gradient-to-br ${product.accent}`} />
+        <div className={`aspect-square rounded-3xl bg-[var(--surface)] bg-gradient-to-br ${product.accent}`} />
 
         <div>
           <p className="text-xs uppercase tracking-wide text-[var(--ink-soft)]">

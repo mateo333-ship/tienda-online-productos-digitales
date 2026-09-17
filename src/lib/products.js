@@ -18,7 +18,7 @@ const PRODUCTS = [
     description:
       "Vela de cera de soja con notas de ámbar y madera de sándalo. Combustión limpia de hasta 45 horas.",
     details: ["Cera de soja 100% natural", "Mecha de algodón sin plomo", "45h de combustión", "Hecha a mano"],
-    accent: "from-amber-200 to-orange-300",
+    accent: "from-amber-500/30 to-orange-700/30",
   },
   {
     slug: "bruma-de-cedro",
@@ -28,7 +28,7 @@ const PRODUCTS = [
     description:
       "Bruma textil e ambiental con base de cedro y toques de bergamota. Perfecta para renovar cualquier estancia.",
     details: ["100 ml", "Sin alcohol agresivo", "Apta para textiles", "Aroma de larga duración"],
-    accent: "from-stone-200 to-emerald-200",
+    accent: "from-stone-500/25 to-emerald-700/25",
   },
   {
     slug: "taza-terracota",
@@ -38,7 +38,7 @@ const PRODUCTS = [
     description:
       "Taza de cerámica esmaltada a mano, tono terracota mate. Cada pieza es única, con pequeñas variaciones de artesanía.",
     details: ["350 ml", "Apta para microondas", "Esmaltada a mano", "Pieza única"],
-    accent: "from-orange-200 to-rose-200",
+    accent: "from-orange-500/30 to-rose-700/25",
   },
   {
     slug: "difusor-de-lino",
@@ -48,7 +48,7 @@ const PRODUCTS = [
     description:
       "Difusor de varillas con esencia de flor de lino y almizcle blanco. Aroma suave y constante durante meses.",
     details: ["200 ml", "6 varillas de ratán", "Hasta 4 meses de uso", "Sin llama"],
-    accent: "from-slate-200 to-stone-300",
+    accent: "from-slate-500/25 to-stone-600/25",
   },
   {
     slug: "manta-lana-cruda",
@@ -58,7 +58,7 @@ const PRODUCTS = [
     description:
       "Manta tejida en lana cruda sin teñir, 130x180cm. Cálida, transpirable y de tacto natural.",
     details: ["130 x 180 cm", "Lana 100% sin teñir", "Tejido tradicional", "Cuidado en seco"],
-    accent: "from-neutral-200 to-amber-100",
+    accent: "from-neutral-500/25 to-amber-700/20",
   },
   {
     slug: "jabon-avena-miel",
@@ -68,7 +68,7 @@ const PRODUCTS = [
     description:
       "Jabón artesanal exfoliante con avena y miel cruda. Ideal para pieles sensibles.",
     details: ["120 g", "Saponificación en frío", "Sin sulfatos", "Vegano excepto la miel"],
-    accent: "from-yellow-100 to-amber-200",
+    accent: "from-yellow-500/25 to-amber-700/25",
   },
 ];
 

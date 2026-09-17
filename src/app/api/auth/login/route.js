@@ -4,6 +4,7 @@ import { verifyPassword } from "@/server/auth/crypto";
 import { findUserByEmail, publicUser } from "@/server/auth/users-repo";
 import { createSessionToken, SESSION_COOKIE_NAME, sessionCookieOptions } from "@/server/auth/session";
 import { checkRateLimit } from "@/server/auth/rate-limit";
+import { safeRoute } from "@/server/http/safe-route";
 
 const schema = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -14,7 +15,7 @@ function clientKey(req) {
   return req.headers.get("x-forwarded-for") ?? "local";
 }
 
-export async function POST(req) {
+export const POST = safeRoute(async (req) => {
   const limit = checkRateLimit(`login:${clientKey(req)}`, { max: 10, windowMs: 15 * 60 * 1000 });
   if (!limit.allowed) {
     return NextResponse.json(
@@ -46,4 +47,4 @@ export async function POST(req) {
   const res = NextResponse.json({ ok: true, user: publicUser(user) });
   res.cookies.set(SESSION_COOKIE_NAME, token, sessionCookieOptions());
   return res;
-}
+});

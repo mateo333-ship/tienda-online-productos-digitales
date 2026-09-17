@@ -95,7 +95,7 @@ export function OtpInput({ length = 6, value, onChange, disabled, autoFocus = tr
           onPaste={handlePaste}
           className={cn(
             "h-12 w-10 rounded-lg border text-center text-lg font-semibold outline-none transition-all",
-            "bg-white border-[var(--border)] text-[var(--ink)]",
+            "bg-[var(--surface-2)] border-[var(--border)] text-[var(--ink)]",
             "focus:border-[var(--ink)] focus:ring-2 focus:ring-[var(--accent)]",
             digit && "border-[var(--ink)]"
           )}

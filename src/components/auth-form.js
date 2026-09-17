@@ -135,7 +135,7 @@ export function AuthForm({ mode = "login" }) {
         </a>
       </p>
 
-      <p className="mt-3 text-center text-xs text-gray-500">
+      <p className="mt-3 text-center text-xs text-[var(--ink-soft)]">
         <Link href="/" className="hover:underline">
           Volver a la tienda
         </Link>

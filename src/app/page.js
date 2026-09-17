@@ -101,7 +101,7 @@ export default function HomePage() {
           {TESTIMONIALS.map((t) => (
             <figure
               key={t.name}
-              className="rounded-2xl border border-[var(--border)] bg-white p-6"
+              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6"
             >
               <blockquote className="text-sm text-[var(--ink-soft)]">“{t.quote}”</blockquote>
               <figcaption className="mt-4 text-sm font-medium">{t.name}</figcaption>
@@ -115,7 +115,7 @@ export default function HomePage() {
         <div className="flex flex-col items-start gap-6 rounded-3xl bg-[var(--ink)] px-8 py-14 text-[var(--background)] sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-serif text-3xl">Crea tu cuenta y guarda tus pedidos</h2>
-            <p className="mt-2 max-w-md text-sm text-white/70">
+            <p className="mt-2 max-w-md text-sm text-[var(--background)]/70">
               Registro con código de verificación por email y sesión protegida.
             </p>
           </div>

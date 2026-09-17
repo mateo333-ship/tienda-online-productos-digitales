@@ -4,6 +4,7 @@ import { hashOtpCode, generateOtpCode, hashPassword } from "@/server/auth/crypto
 import { createPendingRegistration, findUserByEmail } from "@/server/auth/users-repo";
 import { sendVerificationEmail } from "@/server/auth/mailer";
 import { checkRateLimit } from "@/server/auth/rate-limit";
+import { safeRoute } from "@/server/http/safe-route";
 
 const schema = z.object({
   name: z.string().trim().min(2, "El nombre es demasiado corto").max(80),
@@ -18,7 +19,7 @@ function clientKey(req) {
   return req.headers.get("x-forwarded-for") ?? "local";
 }
 
-export async function POST(req) {
+export const POST = safeRoute(async (req) => {
   const limit = checkRateLimit(`register:${clientKey(req)}`, { max: 6, windowMs: 15 * 60 * 1000 });
   if (!limit.allowed) {
     return NextResponse.json(
@@ -65,4 +66,4 @@ export async function POST(req) {
     // En producción esto se elimina automáticamente.
     devCode: isDev ? code : undefined,
   });
-}
+});

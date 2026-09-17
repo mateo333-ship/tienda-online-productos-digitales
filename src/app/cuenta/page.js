@@ -41,10 +41,10 @@ export default async function CuentaPage() {
         ) : (
           <div className="mt-4 space-y-4">
             {orders.map((order) => (
-              <div key={order.id} className="rounded-xl border border-[var(--border)] bg-white p-5">
+              <div key={order.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
                 <div className="flex items-center justify-between text-sm text-[var(--ink-soft)]">
                   <span>{new Date(order.createdAt).toLocaleDateString("es-ES")}</span>
-                  <span className="rounded-full bg-[var(--surface)] px-3 py-1 text-xs font-medium capitalize">
+                  <span className="rounded-full bg-[var(--surface-2)] px-3 py-1 text-xs font-medium capitalize text-[var(--ink)]">
                     {order.status}
                   </span>
                 </div>

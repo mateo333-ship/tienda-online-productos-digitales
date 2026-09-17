@@ -38,21 +38,21 @@ export function ContactForm() {
   return (
     <div className="container px-4 mx-auto">
       <div className="mx-auto">
-        <div className="max-w-md mx-auto px-8 py-6 bg-gray-100 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Contacta con nosotros</h2>
+        <div className="max-w-md mx-auto px-8 py-6 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg">
+          <h2 className="text-2xl font-semibold text-[var(--ink)] mb-4">Contacta con nosotros</h2>
 
           {status === "done" ? (
-            <p className="text-sm text-emerald-700">
+            <p className="text-sm text-emerald-400">
               ¡Gracias! Hemos recibido tu mensaje y te responderemos por email.
             </p>
           ) : (
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label className="block text-gray-800 mb-1" htmlFor="name">
+                <label className="block text-[var(--ink-soft)] mb-1" htmlFor="name">
                   Tu nombre
                 </label>
                 <input
-                  className="w-full px-4 py-2 bg-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-300 transition duration-300"
+                  className="w-full px-4 py-2 bg-[var(--surface-2)] text-[var(--ink)] placeholder-[var(--ink-soft)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition duration-300"
                   placeholder="Escribe tu nombre"
                   type="text"
                   id="name"
@@ -63,11 +63,11 @@ export function ContactForm() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-800 mb-1" htmlFor="email">
+                <label className="block text-[var(--ink-soft)] mb-1" htmlFor="email">
                   Tu email
                 </label>
                 <input
-                  className="w-full px-4 py-2 bg-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-300 transition duration-300"
+                  className="w-full px-4 py-2 bg-[var(--surface-2)] text-[var(--ink)] placeholder-[var(--ink-soft)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition duration-300"
                   placeholder="tu@email.com"
                   name="email"
                   id="email"
@@ -78,11 +78,11 @@ export function ContactForm() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-800 mb-1" htmlFor="message">
+                <label className="block text-[var(--ink-soft)] mb-1" htmlFor="message">
                   Tu mensaje
                 </label>
                 <textarea
-                  className="w-full px-4 py-2 bg-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-300 transition duration-300"
+                  className="w-full px-4 py-2 bg-[var(--surface-2)] text-[var(--ink)] placeholder-[var(--ink-soft)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition duration-300"
                   rows="4"
                   placeholder="Cuéntanos en qué podemos ayudarte"
                   name="message"
@@ -93,10 +93,10 @@ export function ContactForm() {
                 />
               </div>
 
-              {error && <p className="mb-4 text-sm text-rose-600">{error}</p>}
+              {error && <p className="mb-4 text-sm text-rose-400">{error}</p>}
 
               <button
-                className="w-full bg-yellow-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-yellow-400 transition duration-300"
+                className="w-full bg-[var(--accent)] text-[var(--accent-ink)] py-2 px-4 rounded-lg hover:brightness-110 transition duration-300 font-medium"
                 type="submit"
                 disabled={status === "loading"}
               >

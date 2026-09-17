@@ -57,7 +57,7 @@ export default function CarritoPage() {
           {items.map((item) => (
             <div
               key={item.slug}
-              className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-white p-4"
+              className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
             >
               <div>
                 <p className="font-medium">{item.name}</p>
@@ -69,7 +69,7 @@ export default function CarritoPage() {
                   min={1}
                   value={item.quantity}
                   onChange={(e) => updateQuantity(item.slug, Number(e.target.value))}
-                  className="w-16 rounded-md border border-[var(--border)] px-2 py-1 text-center"
+                  className="w-16 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1 text-center text-[var(--ink)]"
                 />
                 <button
                   onClick={() => removeItem(item.slug)}
@@ -86,7 +86,7 @@ export default function CarritoPage() {
             <span>{formatPrice(total)}</span>
           </div>
 
-          {error && <p className="text-sm text-rose-600">{error}</p>}
+          {error && <p className="text-sm text-rose-400">{error}</p>}
 
           <div className="pt-2">
             <Button onClick={handleCheckout} disabled={placing}>

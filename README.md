@@ -25,6 +25,53 @@ Antes de desplegarla de verdad, copia `.env.local.example` como
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
+## Poner la tienda en producción (Vercel)
+
+Si has desplegado (o vas a desplegar) esta web en Vercel y el registro o
+el inicio de sesión te daban un error como
+`Failed to execute 'json' on 'Response': Unexpected end of JSON input`,
+es por esto: **en local, guardar los usuarios en un fichero JSON
+funciona porque el disco es tuyo y no se borra. En Vercel no** — las
+funciones se ejecutan en un disco de solo lectura que además se reinicia
+todo el rato, así que cualquier intento de guardar un usuario fallaba
+por dentro, y el navegador recibía una respuesta vacía en vez de JSON.
+
+Para que funcione de verdad en Vercel hacen falta dos cosas, las dos
+gratis y sin tarjeta de crédito:
+
+1. **Una base de datos Redis (Upstash), para guardar usuarios y pedidos.**
+   - En el panel de tu proyecto en Vercel, ve a la pestaña **Storage** →
+     **Create Database** → elige **Upstash** / **Redis** (o, si no te
+     aparece ahí, crea una gratis directamente en
+     [upstash.com](https://upstash.com) y conéctala luego a mano).
+   - Al crearla, Vercel añade automáticamente dos variables de entorno a
+     tu proyecto: `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`.
+     El código ya está preparado para detectarlas y usarlas solo — no
+     hay que tocar nada más.
+2. **La variable `SESSION_SECRET`, para las sesiones.**
+   - En Vercel: tu proyecto → **Settings** → **Environment Variables** →
+     añade `SESSION_SECRET` con un valor largo y aleatorio. Puedes
+     generarlo en tu ordenador con:
+     ```bash
+     node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+     ```
+   - **Nunca** subas tu `.env.local` a GitHub ni reutilices el mismo
+     secreto en varios proyectos.
+
+Después de añadir las dos variables, haz un **redeploy** (Vercel no
+las aplica a un despliegue que ya existía). Con eso, el registro, la
+verificación por código y el inicio de sesión deberían funcionar igual
+que en tu ordenador.
+
+Si algo sigue fallando: en Vercel, pestaña **Logs** de tu proyecto,
+verás el error real (ahora todas las rutas de la API atrapan cualquier
+fallo inesperado y lo escriben ahí, en vez de dejar que el navegador
+reciba una respuesta vacía).
+
+En tu ordenador no tienes que hacer nada de esto: si no existen esas
+variables de Redis, la web sigue usando ficheros JSON locales
+automáticamente, como hasta ahora.
+
 ## Qué hay construido y qué es todavía una maqueta
 
 Para que puedas probar la tienda entera hoy mismo, sin depender de nada
@@ -36,7 +83,7 @@ producción. Aquí está la lista completa, sin sorpresas:
 | Catálogo de productos | Datos de ejemplo en `src/lib/products.js` | Conectar una base de datos (ver más abajo) |
 | Cuentas de cliente, contraseñas, sesiones | **Real y funcional**: contraseñas con hash bcrypt, sesión cifrada, verificación por email | Ninguna, esto ya está bien hecho — solo falta desplegar con HTTPS |
 | Envío del código de verificación | Se escribe en la consola del servidor (y se muestra en pantalla solo en desarrollo) | Conectar un proveedor de email real (Resend, Postmark, SES...) en `src/server/auth/mailer.js` |
-| Guardado de usuarios y pedidos | Ficheros JSON en `src/server/data/` (no se suben a git) | Sustituir por una base de datos real — todo el código ya está organizado para que este cambio sea pequeño (ver abajo) |
+| Guardado de usuarios y pedidos | Ficheros JSON en local; en Vercel usa Redis (Upstash) si configuras las variables de entorno (ver "Poner la tienda en producción" más abajo) | Puedes seguir así, o migrar a una base de datos SQL más adelante — el código ya está organizado para que ese cambio sea pequeño (ver abajo) |
 | Pago | No implementado — "confirmar pedido" solo guarda el pedido | Conectar una pasarela de pago (Stripe, Redsys...) |
 
 ## Cómo está protegida la cuenta de cada cliente
@@ -86,6 +133,18 @@ o [Supabase](https://supabase.com)), solo hay que reescribir el interior
 de esas funciones para que hagan una consulta SQL en lugar de leer el
 JSON — la forma de entrada/salida de cada función se mantiene igual, así
 que ninguna página ni componente del resto de la web tiene que cambiar.
+
+## Paleta de colores
+
+Los colores de toda la web (fondo, superficies, texto, bordes) se tomaron
+midiendo directamente los estilos reales de **solreader.com**: fondo casi
+negro (`#141414`), texto blanco cálido (`#fbfef9`) y un gris medio para
+superficies secundarias — esa web no usa ningún color saturado propio.
+Sobre esa base neutra y oscura, el verde neón de la plantilla de botón
+que pediste (`--accent` en `src/app/globals.css`) queda como único acento
+de color de la interfaz. El formulario de inicio de sesión / registro
+usa esas mismas variables de color, pero mantiene exactamente la misma
+estructura HTML y el mismo comportamiento que antes.
 
 ## Componentes de diseño usados
 
