@@ -12,7 +12,11 @@ import { useSession } from "./session-provider";
  * relacionadas en globals.css), con la lógica de peticiones al servidor
  * añadida encima.
  */
-export function AuthForm({ mode = "login" }) {
+export function AuthForm({ mode = "login", next }) {
+  // Solo aceptamos rutas relativas propias de la web como destino tras
+  // iniciar sesión (nunca una URL externa), para evitar redirecciones a
+  // sitios ajenos.
+  const safeNext = typeof next === "string" && next.startsWith("/") ? next : "/cuenta";
   const [isRegister, setIsRegister] = useState(mode === "register");
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
@@ -57,7 +61,7 @@ export function AuthForm({ mode = "login" }) {
         // Actualizamos la sesión al instante (sin esperar a recargar nada),
         // así la cabecera ya dice "Hola, {nombre}" en la siguiente página.
         setUser(data.user);
-        router.push("/cuenta");
+        router.push(safeNext);
         router.refresh();
       });
     } catch (err) {

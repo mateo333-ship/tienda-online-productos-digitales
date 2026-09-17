@@ -49,7 +49,15 @@ export default function CarritoPage() {
     <div className="mx-auto max-w-3xl px-6 py-16">
       <h1 className="font-serif text-4xl">Tu carrito</h1>
 
-      {items.length === 0 ? (
+      {!user ? (
+        <p className="mt-6 text-[var(--ink-soft)]">
+          Necesitas una cuenta para tener un carrito.{" "}
+          <Link href="/login" className="underline">
+            Inicia sesión o regístrate
+          </Link>{" "}
+          — si ya habías añadido productos antes, seguirán ahí en cuanto entres.
+        </p>
+      ) : items.length === 0 ? (
         <p className="mt-6 text-[var(--ink-soft)]">
           Todavía no has añadido nada.{" "}
           <Link href="/productos" className="underline">
@@ -94,14 +102,12 @@ export default function CarritoPage() {
 
           <div className="pt-2">
             <Button onClick={handleCheckout} disabled={placing}>
-              {placing ? "Procesando…" : user ? "Confirmar pedido" : "Inicia sesión para pagar"}
+              {placing ? "Procesando…" : "Confirmar pedido"}
             </Button>
           </div>
-          {!user && (
-            <p className="text-xs text-[var(--ink-soft)]">
-              El pago todavía no está conectado — esto guarda el pedido en tu cuenta como demo.
-            </p>
-          )}
+          <p className="text-xs text-[var(--ink-soft)]">
+            El pago todavía no está conectado — esto guarda el pedido en tu cuenta como demo.
+          </p>
         </div>
       )}
     </div>
