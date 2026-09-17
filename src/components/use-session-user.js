@@ -13,7 +13,7 @@ export function useSessionUser() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/auth/me")
+    fetch("/api/auth/me", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         if (active) setUser(data.user ?? null);
