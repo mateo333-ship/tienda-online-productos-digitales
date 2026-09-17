@@ -36,37 +36,66 @@ funciones se ejecutan en un disco de solo lectura que además se reinicia
 todo el rato, así que cualquier intento de guardar un usuario fallaba
 por dentro, y el navegador recibía una respuesta vacía en vez de JSON.
 
-Para que funcione de verdad en Vercel hacen falta dos cosas, las dos
-gratis y sin tarjeta de crédito:
+Para que funcione de verdad en Vercel hacen falta dos cosas:
 
-1. **Una base de datos Redis (Upstash), para guardar usuarios y pedidos.**
-   - En el panel de tu proyecto en Vercel, ve a la pestaña **Storage** →
-     **Create Database** → elige **Upstash** / **Redis** (o, si no te
-     aparece ahí, crea una gratis directamente en
-     [upstash.com](https://upstash.com) y conéctala luego a mano).
-   - Al crearla, Vercel añade automáticamente dos variables de entorno a
-     tu proyecto: `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`.
-     El código ya está preparado para detectarlas y usarlas solo — no
-     hay que tocar nada más.
-2. **La variable `SESSION_SECRET`, para las sesiones.**
-   - En Vercel: tu proyecto → **Settings** → **Environment Variables** →
-     añade `SESSION_SECRET` con un valor largo y aleatorio. Puedes
-     generarlo en tu ordenador con:
-     ```bash
-     node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-     ```
-   - **Nunca** subas tu `.env.local` a GitHub ni reutilices el mismo
-     secreto en varios proyectos.
+### 1. Un proyecto de Firebase con Realtime Database
 
-Después de añadir las dos variables, haz un **redeploy** (Vercel no
+1. Ve a [console.firebase.google.com](https://console.firebase.google.com)
+   y crea un proyecto (es gratis; no hace falta tarjeta para lo que
+   necesita esta tienda).
+2. En el menú lateral, entra en **Realtime Database** → **Crear base de
+   datos**. Puedes elegir "modo bloqueado" (el más seguro) al crearla.
+   Anota la URL que te da (algo como
+   `https://tu-proyecto-default-rtdb.europe-west1.firebasedatabase.app`).
+3. Ve a **Configuración del proyecto** (el engranaje) → **Cuentas de
+   servicio**. Si ahí ves un aviso de que tu organización no permite
+   crear claves de cuenta de servicio (es una política de seguridad de
+   Google cada vez más habitual, no algo que hayas hecho mal), no hace
+   falta pelearse con ella: en el panel de la izquierda de esa misma
+   pantalla, bajo **"Credenciales heredadas"**, pulsa **"Secretos de la
+   base de datos"** y copia el secreto que te muestra (o genera uno
+   nuevo con "Añadir secreto" si no hay ninguno). Ese único valor es
+   todo lo que necesitamos — no hace falta ningún fichero `.json`.
+4. En Vercel: tu proyecto → **Settings** → **Environment Variables**, y
+   añade estas dos variables:
+
+   | Variable | Valor |
+   |---|---|
+   | `FIREBASE_DATABASE_URL` | la URL de tu Realtime Database del paso 2 |
+   | `FIREBASE_DATABASE_SECRET` | el secreto que copiaste en el paso 3 |
+
+   El código ya está preparado para detectar estas dos variables y usar
+   Firebase automáticamente en cuanto existan — no hay que tocar nada
+   más. Guarda ese secreto con el mismo cuidado que una contraseña: con
+   él se puede leer y escribir toda la base de datos.
+
+### 2. La variable `SESSION_SECRET`, para las sesiones
+
+En Vercel: tu proyecto → **Settings** → **Environment Variables** →
+añade `SESSION_SECRET` con un valor largo y aleatorio. Puedes generarlo
+en tu ordenador con:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+**Nunca** subas tu `.env.local` a GitHub ni reutilices el mismo secreto
+en varios proyectos.
+
+---
+
+Después de añadir las tres variables (las dos de Firebase más
+`SESSION_SECRET`), haz un **redeploy** (Vercel no
 las aplica a un despliegue que ya existía). Con eso, el registro, la
 verificación por código y el inicio de sesión deberían funcionar igual
-que en tu ordenador.
+que en tu ordenador — solo que ahora los datos se guardan en tu
+Realtime Database, y puedes verlos en tiempo real desde la propia
+consola de Firebase (pestaña Realtime Database), bajo el nodo `tienda`.
 
 Si algo sigue fallando: en Vercel, pestaña **Logs** de tu proyecto,
-verás el error real (ahora todas las rutas de la API atrapan cualquier
-fallo inesperado y lo escriben ahí, en vez de dejar que el navegador
-reciba una respuesta vacía).
+verás el error real (todas las rutas de la API atrapan cualquier fallo
+inesperado y lo escriben ahí, en vez de dejar que el navegador reciba
+una respuesta vacía).
 
 En tu ordenador no tienes que hacer nada de esto: si no existen esas
 variables de Redis, la web sigue usando ficheros JSON locales
@@ -83,7 +112,7 @@ producción. Aquí está la lista completa, sin sorpresas:
 | Catálogo de productos | Datos de ejemplo en `src/lib/products.js` | Conectar una base de datos (ver más abajo) |
 | Cuentas de cliente, contraseñas, sesiones | **Real y funcional**: contraseñas con hash bcrypt, sesión cifrada, verificación por email | Ninguna, esto ya está bien hecho — solo falta desplegar con HTTPS |
 | Envío del código de verificación | Se escribe en la consola del servidor (y se muestra en pantalla solo en desarrollo) | Conectar un proveedor de email real (Resend, Postmark, SES...) en `src/server/auth/mailer.js` |
-| Guardado de usuarios y pedidos | Ficheros JSON en local; en Vercel usa Redis (Upstash) si configuras las variables de entorno (ver "Poner la tienda en producción" más abajo) | Puedes seguir así, o migrar a una base de datos SQL más adelante — el código ya está organizado para que ese cambio sea pequeño (ver abajo) |
+| Guardado de usuarios y pedidos | Ficheros JSON en local; en Vercel usa Firebase Realtime Database si configuras las variables de entorno (ver "Poner la tienda en producción" más arriba) | Puedes seguir así, o migrar a otra base de datos más adelante — el código ya está organizado para que ese cambio sea pequeño (ver abajo) |
 | Pago | No implementado — "confirmar pedido" solo guarda el pedido | Conectar una pasarela de pago (Stripe, Redsys...) |
 
 ## Cómo está protegida la cuenta de cada cliente

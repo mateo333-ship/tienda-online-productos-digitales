@@ -2,7 +2,6 @@ import "server-only";
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { Redis } from "@upstash/redis";
 
 /**
  * ------------------------------------------------------------------
@@ -13,23 +12,19 @@ import { Redis } from "@upstash/redis";
  * de `src/server/data/` funciona perfectamente.
  *
  * Pero en Vercel (y en cualquier hosting "serverless") el disco donde
- * se ejecuta tu código es de solo lectura, excepto una carpeta temporal
- * que además se borra en cualquier momento y no se comparte entre las
- * distintas copias de tu función que Vercel arranca para atender
- * peticiones a la vez. Por eso, al desplegar allí, cualquier intento de
- * escribir un fichero (por ejemplo, al registrarte) fallaba con un
- * error 500 que el navegador no podía interpretar como JSON — el error
- * exacto que viste.
+ * se ejecuta tu código es de solo lectura, así que hay que guardar los
+ * datos en algo que viva fuera de la propia función: aquí usamos
+ * **Firebase Realtime Database**, a través de su API REST y el
+ * "secreto de la base de datos" (Database secret) — no hace falta el
+ * SDK de administrador ni una cuenta de servicio, así que esto funciona
+ * aunque las políticas de tu organización de Google bloqueen la
+ * creación de claves de cuentas de servicio (un bloqueo cada vez más
+ * habitual por defecto). Instrucciones completas en el README
+ * principal, sección "Poner la tienda en producción (Vercel)".
  *
- * La solución real (no un parche) es guardar los datos en algo que
- * viva fuera de la propia función: aquí usamos Redis a través de
- * Upstash, que tiene un plan gratuito y se integra con un clic desde
- * el propio panel de Vercel (Storage → Create Database). Instrucciones
- * completas en el README principal, sección "Poner la tienda en
- * producción (Vercel)".
- *
- * Este fichero detecta solo si esas variables de entorno existen:
- *   - Si existen (típicamente en producción, en Vercel): usa Redis.
+ * Este fichero detecta solo si existen las variables de entorno de
+ * Firebase:
+ *   - Si existen (típicamente en producción, en Vercel): usa Firebase.
  *   - Si no existen (normalmente en tu ordenador): sigue usando
  *     ficheros JSON locales, como hasta ahora, para que `npm run dev`
  *     funcione sin tener que configurar nada.
@@ -40,32 +35,44 @@ import { Redis } from "@upstash/redis";
  * ------------------------------------------------------------------
  */
 
-const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
-const useRedis = Boolean(redisUrl && redisToken);
+const databaseURL = process.env.FIREBASE_DATABASE_URL?.replace(/\/$/, "");
+const databaseSecret = process.env.FIREBASE_DATABASE_SECRET;
 
-const redis = useRedis ? new Redis({ url: redisUrl, token: redisToken }) : null;
+const useFirebase = Boolean(databaseURL && databaseSecret);
 
-export function isUsingRedis() {
-  return useRedis;
+export function isUsingFirebase() {
+  return useFirebase;
 }
 
 // ---------------------------------------------------------------------
-// Modo Redis (producción / Vercel)
+// Modo Firebase Realtime Database (producción / Vercel), vía REST
 // ---------------------------------------------------------------------
-function redisKey(fileName) {
-  // Un espacio de nombres propio para no chocar con otros datos que
-  // guardes en la misma base de datos Redis en el futuro.
-  return `tienda:${fileName}`;
+function firebaseUrl(fileName) {
+  // Los nombres de ruta de Realtime Database no pueden contener ".",
+  // así que quitamos la extensión ".json" del nombre lógico y añadimos
+  // la ".json" que exige la propia API REST al final de la URL.
+  const node = fileName.replace(/\.json$/, "");
+  return `${databaseURL}/tienda/${node}.json?auth=${databaseSecret}`;
 }
 
-async function readFromRedis(fileName, defaultValue) {
-  const value = await redis.get(redisKey(fileName));
+async function readFromFirebase(fileName, defaultValue) {
+  const res = await fetch(firebaseUrl(fileName), { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`No se ha podido leer "${fileName}" de Firebase (HTTP ${res.status}).`);
+  }
+  const value = await res.json();
   return value ?? defaultValue;
 }
 
-async function writeToRedis(fileName, data) {
-  await redis.set(redisKey(fileName), data);
+async function writeToFirebase(fileName, data) {
+  const res = await fetch(firebaseUrl(fileName), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new Error(`No se ha podido guardar "${fileName}" en Firebase (HTTP ${res.status}).`);
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -86,7 +93,7 @@ async function ensureFile(fileName, defaultValue) {
 
 // Un mutex por fichero muy simple para evitar condiciones de carrera si
 // llegan dos escrituras casi a la vez (dos registros al mismo tiempo, etc.).
-// Redis no lo necesita: cada SET ya es atómico.
+// Firebase no lo necesita: cada escritura ya es atómica en su propia ruta.
 const locks = new Map();
 async function withLock(fileName, fn) {
   const previous = locks.get(fileName) ?? Promise.resolve();
@@ -122,9 +129,9 @@ async function writeToFile(fileName, data) {
 // API pública (igual que antes: el resto del proyecto no cambia nada)
 // ---------------------------------------------------------------------
 export async function readJsonStore(fileName, defaultValue) {
-  return useRedis ? readFromRedis(fileName, defaultValue) : readFromFile(fileName, defaultValue);
+  return useFirebase ? readFromFirebase(fileName, defaultValue) : readFromFile(fileName, defaultValue);
 }
 
 export async function writeJsonStore(fileName, data) {
-  return useRedis ? writeToRedis(fileName, data) : writeToFile(fileName, data);
+  return useFirebase ? writeToFirebase(fileName, data) : writeToFile(fileName, data);
 }
