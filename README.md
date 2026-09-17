@@ -92,6 +92,39 @@ que en tu ordenador — solo que ahora los datos se guardan en tu
 Realtime Database, y puedes verlos en tiempo real desde la propia
 consola de Firebase (pestaña Realtime Database), bajo el nodo `tienda`.
 
+### 3. Enviar los códigos de verificación por email de verdad (Resend)
+
+Sin esto, el código de verificación no llega a ningún sitio en
+producción (solo se escribe en los Logs de Vercel). Para que llegue de
+verdad a la bandeja de entrada de tus clientes:
+
+1. Crea una cuenta gratuita en [resend.com](https://resend.com) (el
+   plan gratis incluye 3.000 emails al mes, de sobra para empezar).
+2. En el panel de Resend, ve a **API Keys** → **Create API Key** y
+   copia la clave que te da (empieza por `re_`).
+3. En Vercel: tu proyecto → **Settings** → **Environment Variables** →
+   añade `RESEND_API_KEY` con esa clave.
+4. Haz un **redeploy**.
+
+Con solo esto ya puedes probarlo, pero con una limitación importante:
+mientras no verifiques un dominio propio en Resend, **solo puedes
+enviar emails a la dirección con la que creaste tu cuenta de Resend**
+(es una restricción de seguridad de Resend, no nuestra, pensada para
+evitar spam desde cuentas nuevas). Para poder enviar códigos a
+cualquier cliente:
+
+5. En Resend, ve a **Domains** → **Add Domain**, escribe un dominio
+   tuyo (por ejemplo `terracasa.com`) y añade los registros DNS que te
+   indique en el sitio donde compraste ese dominio. Suele tardar entre
+   unos minutos y un par de horas en verificarse.
+6. Una vez verificado, en Vercel añade también `RESEND_FROM_EMAIL` con
+   un valor como `Terra Casa <codigos@terracasa.com>` (usando tu
+   dominio ya verificado), y redeploy otra vez.
+
+Si no tienes todavía un dominio propio, no pasa nada: puedes seguir
+usando la tienda igualmente, simplemente los emails de verificación
+solo llegarán a tu propia cuenta mientras pruebas.
+
 Si algo sigue fallando: en Vercel, pestaña **Logs** de tu proyecto,
 verás el error real (todas las rutas de la API atrapan cualquier fallo
 inesperado y lo escriben ahí, en vez de dejar que el navegador reciba
@@ -111,7 +144,7 @@ producción. Aquí está la lista completa, sin sorpresas:
 |---|---|---|
 | Catálogo de productos | Datos de ejemplo en `src/lib/products.js` | Conectar una base de datos (ver más abajo) |
 | Cuentas de cliente, contraseñas, sesiones | **Real y funcional**: contraseñas con hash bcrypt, sesión cifrada, verificación por email | Ninguna, esto ya está bien hecho — solo falta desplegar con HTTPS |
-| Envío del código de verificación | Se escribe en la consola del servidor (y se muestra en pantalla solo en desarrollo) | Conectar un proveedor de email real (Resend, Postmark, SES...) en `src/server/auth/mailer.js` |
+| Envío del código de verificación | **Real si configuras `RESEND_API_KEY`** (ver "Poner la tienda en producción" más arriba); si no, se escribe en la consola del servidor y se muestra en pantalla solo en desarrollo | Verificar un dominio propio en Resend para poder enviar a cualquier cliente, no solo a tu propia cuenta |
 | Guardado de usuarios y pedidos | Ficheros JSON en local; en Vercel usa Firebase Realtime Database si configuras las variables de entorno (ver "Poner la tienda en producción" más arriba) | Puedes seguir así, o migrar a otra base de datos más adelante — el código ya está organizado para que ese cambio sea pequeño (ver abajo) |
 | Pago | No implementado — "confirmar pedido" solo guarda el pedido | Conectar una pasarela de pago (Stripe, Redsys...) |
 
