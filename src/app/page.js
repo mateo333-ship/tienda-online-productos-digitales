@@ -6,32 +6,32 @@ import { getFeaturedProducts } from "@/lib/products";
 const STEPS = [
   {
     n: "01",
-    title: "Eliges tus piezas",
-    text: "Explora un catálogo pequeño y cuidado: cada objeto está pensado para durar, no para acumularse.",
+    title: "Eliges tu curso",
+    text: "Explora un catálogo pequeño y cuidado: cada ebook o curso está pensado para aprender de verdad, no para acumular sin abrir.",
   },
   {
     n: "02",
     title: "Creas tu cuenta",
-    text: "Registro con verificación por email y sesión protegida, para que tus pedidos siempre estén donde los dejaste.",
+    text: "Registro con verificación por email y sesión protegida, para que tus compras siempre estén donde los dejaste.",
   },
   {
     n: "03",
-    title: "Llega a casa",
-    text: "Preparamos cada pedido a mano y te avisamos en cada paso, desde tu perfil de cliente.",
+    title: "Descarga al instante",
+    text: "En cuanto se confirma el pedido, tu ebook o curso está disponible en tu cuenta al momento — sin envíos ni esperas.",
   },
 ];
 
 const TESTIMONIALS = [
   {
-    quote: "La vela ámbar huele exactamente como esperaba, algo raro comprando online.",
+    quote: "Pagué y en un minuto ya tenía el ebook en mi cuenta, sin esperar ningún email.",
     name: "Marta G.",
   },
   {
-    quote: "Pedí la manta de lana y ya voy por la segunda. Se nota que está bien hecha.",
+    quote: "El curso está mejor explicado que otros que pagué el doble de caro.",
     name: "Iñaki R.",
   },
   {
-    quote: "El proceso de compra fue rapidísimo y el envío llegó antes de lo previsto.",
+    quote: "Pude descargarlo al momento y ponerme a estudiar esa misma noche.",
     name: "Clara M.",
   },
 ];
@@ -44,14 +44,14 @@ export default function HomePage() {
       {/* Hero */}
       <section className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-6 pb-20 pt-16 sm:pt-24">
         <span className="rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--ink-soft)]">
-          Nueva colección de otoño
+          Cursos y ebooks digitales
         </span>
         <h1 className="max-w-2xl font-serif text-5xl leading-tight sm:text-6xl">
-          Objetos sencillos, hechos para quedarse.
+          Aprende hoy, no la semana que viene.
         </h1>
         <p className="max-w-xl text-lg text-[var(--ink-soft)]">
-          The God Supplier reúne velas, cerámica y textil de pequeños talleres, para una casa con
-          menos ruido y más carácter.
+          The God Supplier reúne cursos y ebooks digitales pensados para aprender de verdad:
+          pagas y descargas al momento, sin envíos ni esperas.
         </p>
         <div className="flex flex-wrap items-center gap-4 pt-2">
           <Button href="/productos">Ver catálogo</Button>

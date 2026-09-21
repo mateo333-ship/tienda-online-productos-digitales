@@ -2,6 +2,7 @@ import "./globals.css";
 import { CartProvider } from "@/components/cart-provider";
 import { LoadingProvider } from "@/components/loading-overlay";
 import { SessionProvider } from "@/components/session-provider";
+import { PromoBanner } from "@/components/promo-banner";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 
@@ -14,9 +15,9 @@ import { SiteFooter } from "@/components/site-footer";
 // línea en globals.css (--font-sans / --font-serif).
 
 export const metadata = {
-  title: "The God Supplier — Objetos sencillos para el hogar",
+  title: "The God Supplier — Cursos y ebooks digitales al instante",
   description:
-    "Tienda online de objetos de casa hechos con cuidado: velas, cerámica, textil y aromas.",
+    "Tienda online de cursos y ebooks digitales: compra y descarga al momento, sin envíos ni esperas.",
 };
 
 export default function RootLayout({ children }) {
@@ -26,6 +27,7 @@ export default function RootLayout({ children }) {
         <LoadingProvider>
           <SessionProvider>
             <CartProvider>
+              <PromoBanner />
               <SiteHeader />
               <main className="flex-1">{children}</main>
               <SiteFooter />

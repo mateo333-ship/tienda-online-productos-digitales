@@ -7,7 +7,7 @@ export function SiteFooter() {
         <div>
           <p className="text-lg font-semibold tracking-tight">The God Supplier</p>
           <p className="mt-3 max-w-xs text-sm text-[var(--ink-soft)]">
-            Objetos sencillos para una casa en calma. Hechos con cuidado, pensados para durar.
+            Cursos y ebooks digitales para aprender a tu ritmo. Compra y descarga al instante.
           </p>
         </div>
 

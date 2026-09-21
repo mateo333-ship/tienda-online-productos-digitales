@@ -28,3 +28,19 @@ export async function createOrderForUser(userId, { items, total }) {
   await writeJsonStore(ORDERS_FILE, orders);
   return order;
 }
+
+/**
+ * Elimina un pedido, pero SOLO si pertenece al usuario que lo pide: se
+ * comprueba `o.userId === userId` antes de borrar, así que nadie puede
+ * borrar (ni siquiera adivinando el id) un pedido de otra cuenta.
+ * Devuelve `true` si había un pedido suyo con ese id y se ha borrado.
+ */
+export async function deleteOrderForUser(userId, orderId) {
+  const orders = await readJsonStore(ORDERS_FILE, []);
+  const existed = orders.some((o) => o.id === orderId && o.userId === userId);
+  if (!existed) return false;
+
+  const remaining = orders.filter((o) => !(o.id === orderId && o.userId === userId));
+  await writeJsonStore(ORDERS_FILE, remaining);
+  return true;
+}

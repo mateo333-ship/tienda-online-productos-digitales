@@ -271,3 +271,20 @@ body {
   background: var(--ink);
   color: var(--background);
 }
+
+/* =======================================================================
+   Cinta animada de descuento (PromoBanner)
+   El contenido se duplica en el componente y aquí solo desplazamos ese
+   bloque un -50% exacto, así el bucle no se nota nunca. Con
+   "prefers-reduced-motion: reduce" la clase motion-safe: del componente
+   ya evita aplicar la animación, así que aquí no hace falta duplicar esa
+   condición.
+======================================================================= */
+@keyframes promo-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
