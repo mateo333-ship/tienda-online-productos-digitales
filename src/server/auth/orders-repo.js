@@ -14,7 +14,7 @@ export async function listOrdersForUser(userId) {
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
-export async function createOrderForUser(userId, { items, total, status = "pendiente" }) {
+export async function createOrderForUser(userId, { items, total, status = "pendiente", buyerInfo = null }) {
   const orders = await readJsonStore(ORDERS_FILE, []);
   const order = {
     id: randomUUID(),
@@ -22,6 +22,11 @@ export async function createOrderForUser(userId, { items, total, status = "pendi
     items,
     total,
     status,
+    // Datos de a quién y a qué email hay que entregarle la compra: se
+    // piden en el propio carrito antes de pagar (ver /api/checkout) y
+    // pueden no coincidir con el email de la cuenta, así que se guardan
+    // aparte, por pedido.
+    buyerInfo,
     createdAt: Date.now(),
   };
   orders.push(order);

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { getStripeClient, isStripeConfigured } from "@/server/payments/stripe";
-import { setOrderStatus } from "@/server/auth/orders-repo";
-import { clearCartForUser } from "@/server/auth/cart-repo";
+import { getStripeClient, isStripeConfigured, deliverPaidOrder } from "@/server/payments/stripe";
+import { setOrderStatus, findOrderById } from "@/server/auth/orders-repo";
 
 /**
  * ------------------------------------------------------------------
@@ -48,8 +47,14 @@ export async function POST(req) {
       const userId = session.metadata?.userId;
 
       if (orderId && session.payment_status === "paid") {
-        await setOrderStatus(orderId, "pagado");
-        if (userId) await clearCartForUser(userId);
+        const order = await findOrderById(orderId);
+        // `deliverPaidOrder` ya comprueba que el pedido no estuviera
+        // pagado de antes, así que si la vuelta del cliente a /cuenta se
+        // adelantó a este webhook, aquí simplemente no se hace nada más
+        // (y sobre todo, no se manda el email de entrega dos veces).
+        if (order && (!userId || order.userId === userId)) {
+          await deliverPaidOrder(order);
+        }
       }
     } else if (event.type === "checkout.session.async_payment_failed") {
       const orderId = event.data.object.metadata?.orderId;

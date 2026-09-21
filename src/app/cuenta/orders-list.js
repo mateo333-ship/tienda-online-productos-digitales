@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useLoading } from "@/components/loading-overlay";
 import { formatPrice } from "@/lib/utils";
+import { getProductBySlug } from "@/lib/products";
 
 const STATUS_LABELS = {
   pendiente: "Pendiente",
@@ -76,15 +77,33 @@ export function OrdersList({ initialOrders }) {
             <span>{new Date(order.createdAt).toLocaleDateString("es-ES")}</span>
             <StatusPill status={order.status} />
           </div>
-          <ul className="mt-3 space-y-1 text-sm">
-            {order.items.map((item) => (
-              <li key={item.slug} className="flex justify-between">
-                <span>
-                  {item.quantity} × {item.name}
-                </span>
-                <span>{formatPrice(item.price * item.quantity)}</span>
-              </li>
-            ))}
+          <ul className="mt-3 space-y-2 text-sm">
+            {order.items.map((item) => {
+              // El acceso "de verdad" se manda por email en cuanto se
+              // confirma el pago; este enlace es solo un respaldo por si
+              // ese email no llegó o se perdió.
+              const accessUrl = order.status === "pagado" ? getProductBySlug(item.slug)?.accessUrl : null;
+              return (
+                <li key={item.slug}>
+                  <div className="flex justify-between">
+                    <span>
+                      {item.quantity} × {item.name}
+                    </span>
+                    <span>{formatPrice(item.price * item.quantity)}</span>
+                  </div>
+                  {accessUrl && (
+                    <a
+                      href={accessUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-block text-xs font-medium text-[var(--accent)] underline"
+                    >
+                      Acceder ahora
+                    </a>
+                  )}
+                </li>
+              );
+            })}
           </ul>
           <div className="mt-3 flex items-center justify-between border-t border-[var(--border)] pt-3">
             <span className="font-medium">Total</span>

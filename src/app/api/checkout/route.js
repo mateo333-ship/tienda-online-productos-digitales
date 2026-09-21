@@ -6,12 +6,42 @@ import { getProductBySlug } from "@/lib/products";
 import { getStripeClient, isStripeConfigured } from "@/server/payments/stripe";
 import { safeRoute } from "@/server/http/safe-route";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Nombre, email de entrega y teléfono (opcional) que el cliente rellena
+// en el propio carrito antes de pagar: es a ese email (no necesariamente
+// el de la cuenta) a donde se manda el acceso a lo comprado en cuanto
+// Stripe confirma el pago. Nombre y email son obligatorios: sin ellos no
+// hay forma de saber a quién ni a dónde entregar la compra.
+function sanitizeBuyerInfo(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const name = String(raw.name ?? "").trim().slice(0, 120);
+  const email = String(raw.email ?? "").trim().slice(0, 200);
+  const phone = String(raw.phone ?? "").trim().slice(0, 40);
+  if (!name || !EMAIL_RE.test(email)) return null;
+  return { name, email, phone: phone || null };
+}
+
 // Inicia el pago de TODO el carrito de una vez: un único Checkout Session
 // de Stripe con varios `line_items` (uno por producto), así que el
 // cliente hace un solo pago que cubre todo, no uno por producto.
 export const POST = safeRoute(async (req) => {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
+  let body = {};
+  try {
+    body = await req.json();
+  } catch {
+    body = {};
+  }
+  const buyerInfo = sanitizeBuyerInfo(body.buyerInfo);
+  if (!buyerInfo) {
+    return NextResponse.json(
+      { error: "Faltan tu nombre y un email válido para poder entregarte la compra." },
+      { status: 400 }
+    );
+  }
 
   const cartItems = await getCartForUser(user.id);
   if (cartItems.length === 0) {
@@ -43,7 +73,12 @@ export const POST = safeRoute(async (req) => {
     // Modo demo: sin Stripe configurado (ver README), seguimos guardando
     // el pedido directamente como hasta ahora, sin cobro real, para que
     // el resto de la web se pueda seguir probando sin cortar nada.
-    const order = await createOrderForUser(user.id, { items: resolvedItems, total, status: "pendiente" });
+    const order = await createOrderForUser(user.id, {
+      items: resolvedItems,
+      total,
+      status: "pendiente",
+      buyerInfo,
+    });
     await clearCartForUser(user.id);
     return NextResponse.json({ ok: true, mode: "demo", order });
   }
@@ -55,6 +90,7 @@ export const POST = safeRoute(async (req) => {
     items: resolvedItems,
     total,
     status: "pendiente_pago",
+    buyerInfo,
   });
 
   // Si Stripe fallara justo aquí (clave mal puesta, sin conexión, etc.),
@@ -66,7 +102,10 @@ export const POST = safeRoute(async (req) => {
     const stripe = getStripeClient();
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      customer_email: user.email,
+      // El email que se usa aquí (y al que se manda la compra al pagar)
+      // es el que el cliente ha escrito en el carrito, que puede no ser
+      // el mismo con el que inició sesión.
+      customer_email: buyerInfo.email,
       line_items: resolvedItems.map((item) => ({
         quantity: item.quantity,
         price_data: {

@@ -228,6 +228,48 @@ promo-banner.js` y `src/app/carrito/page.js`) es solo un aviso visual,
 y el código promocional de Stripe es lo que de verdad aplica el
 descuento — hay que mantener los dos iguales a mano.
 
+### 5. Entrega automática de la compra (el email con el acceso a la guía)
+
+Al ser productos 100% digitales, Stripe por sí solo NO entrega nada: solo
+cobra. La entrega la hace esta web en cuanto Stripe confirma el pago,
+usando el mismo Brevo que ya tienes configurado para los códigos de
+verificación (paso 3 de más arriba) — no hace falta nada adicional para
+que esto funcione.
+
+Cómo encaja todo:
+
+1. En el propio carrito, antes de pagar, se le pide al cliente su
+   **nombre**, el **email al que quiere que le llegue el acceso** (no
+   tiene por qué ser el mismo con el que inició sesión) y su
+   **teléfono** (opcional). Sin nombre y un email válido, no se puede
+   pagar.
+2. Cada producto del catálogo (`src/lib/products.js`) tiene un campo
+   opcional `accessUrl` con el enlace real donde vive ese producto (un
+   Google Drive, una página propia, lo que sea). Para añadírselo a un
+   producto, edita su entrada y pon el enlace ahí, por ejemplo:
+   ```js
+   accessUrl: "https://tu-enlace-real-aqui.com",
+   ```
+3. En cuanto Stripe confirma el pago (por el webhook, o al volver el
+   cliente a `/cuenta`), se manda un único email al comprador con un
+   bloque por cada producto distinto que haya comprado — así, si compra
+   dos guías a la vez, le llegan sus dos enlaces bien separados, cada
+   uno debajo del nombre de su producto correspondiente. Si algún
+   producto todavía no tiene `accessUrl` puesto, ese bloque avisa de que
+   se le contactará a mano en su lugar, en vez de salir vacío.
+4. Ese mismo enlace (si el pedido ya está pagado) se muestra también en
+   "Mi cuenta" como respaldo, por si el email no llegara.
+5. Esto es idempotente a propósito (ver `deliverPaidOrder` en
+   `src/server/payments/stripe.js`): aunque el webhook y la vuelta del
+   cliente a `/cuenta` lleguen casi a la vez, el email de entrega se
+   manda una sola vez por pedido.
+
+Si algún día quieres pedir más datos del comprador (por ejemplo su
+usuario de Vinted/Wallapop), el formulario está en
+`src/app/carrito/page.js` y se guarda todo en `buyerInfo` dentro del
+pedido — solo hay que añadir el campo nuevo ahí y en la validación de
+`src/app/api/checkout/route.js`.
+
 ## Qué hay construido y qué es todavía una maqueta
 
 Para que puedas probar la tienda entera hoy mismo, sin depender de nada
@@ -241,6 +283,7 @@ producción. Aquí está la lista completa, sin sorpresas:
 | Envío del código de verificación | **Real y a cualquier cliente si configuras `BREVO_API_KEY`** (ver "Poner la tienda en producción" más arriba, no hace falta dominio propio); si no, se escribe en la consola del servidor y se muestra en pantalla solo en desarrollo | Nada obligatorio — opcionalmente, un dominio propio verificado (en Brevo o Resend) mejora la entrega |
 | Guardado de usuarios y pedidos | Ficheros JSON en local; en Vercel usa Firebase Realtime Database si configuras las variables de entorno (ver "Poner la tienda en producción" más arriba) | Puedes seguir así, o migrar a otra base de datos más adelante — el código ya está organizado para que ese cambio sea pequeño (ver abajo) |
 | Pago | **Real con Stripe si configuras `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET`** (ver "Poner la tienda en producción" más arriba): un único pago cubre todo el carrito, con varios productos a la vez; si no, sigue en modo demo (guarda el pedido sin cobrar) | Nada obligatorio para probar; para cobrar de verdad, activar la cuenta de Stripe con datos bancarios/fiscales y usar las claves de modo real |
+| Entrega del producto tras el pago | **Real**: email automático por Brevo con el enlace de cada producto comprado, en cuanto Stripe confirma el pago (ver "Poner la tienda en producción" más arriba, punto 5) | Añadir el campo `accessUrl` (el enlace real) a cada producto en `src/lib/products.js` |
 
 ## Cómo está protegida la cuenta de cada cliente
 

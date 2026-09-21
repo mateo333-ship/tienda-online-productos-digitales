@@ -1,8 +1,10 @@
 import "server-only";
 
 import Stripe from "stripe";
-import { setOrderStatus } from "../auth/orders-repo";
+import { setOrderStatus, findOrderById } from "../auth/orders-repo";
 import { clearCartForUser } from "../auth/cart-repo";
+import { sendOrderDeliveryEmail } from "../auth/mailer";
+import { getProductBySlug } from "../../lib/products";
 
 /**
  * ------------------------------------------------------------------
@@ -42,6 +44,47 @@ export function getStripeClient() {
 }
 
 /**
+ * Marca un pedido como pagado, vacía el carrito y entrega la compra por
+ * email — TODO en un único sitio para que da igual por qué camino llegue
+ * la confirmación (webhook o vuelta del cliente a /cuenta), el resultado
+ * es siempre el mismo.
+ *
+ * Es idempotente a propósito: si el pedido YA estaba "pagado" (porque el
+ * otro camino se adelantó), no hace nada más — así nunca se manda el
+ * email de entrega dos veces aunque el webhook y la vuelta del cliente
+ * lleguen casi a la vez.
+ */
+export async function deliverPaidOrder(order) {
+  if (!order || order.status === "pagado") return;
+
+  await setOrderStatus(order.id, "pagado");
+  await clearCartForUser(order.userId);
+
+  // Cada producto lleva su propio enlace de acceso (campo `accessUrl`
+  // del catálogo), así que si el pedido tiene varias guías distintas,
+  // el email de entrega incluye un bloque separado por cada una — nunca
+  // se mezclan ni se manda solo el de la primera.
+  const items = (order.items || []).map((item) => ({
+    name: item.name,
+    accessUrl: getProductBySlug(item.slug)?.accessUrl || null,
+  }));
+
+  if (order.buyerInfo?.email) {
+    try {
+      await sendOrderDeliveryEmail({
+        toEmail: order.buyerInfo.email,
+        toName: order.buyerInfo.name,
+        items,
+      });
+    } catch (err) {
+      console.error("[MAIL] No se ha podido enviar el email de entrega:", err.message);
+    }
+  } else {
+    console.error(`[MAIL] Pedido ${order.id} pagado sin buyerInfo.email: no se ha podido entregar por email.`);
+  }
+}
+
+/**
  * Se llama justo cuando el cliente vuelve de pagar en Stripe (desde
  * `success_url`). Comprueba de verdad contra la API de Stripe que ESE
  * usuario ha pagado ESE pedido (nunca nos fiamos del simple hecho de que
@@ -65,8 +108,10 @@ export async function confirmCheckoutSession(sessionId, userId) {
     const orderId = session.metadata?.orderId;
     if (!orderId) return;
 
-    await setOrderStatus(orderId, "pagado");
-    await clearCartForUser(userId);
+    const order = await findOrderById(orderId);
+    if (!order || order.userId !== userId) return;
+
+    await deliverPaidOrder(order);
   } catch (err) {
     console.error("[STRIPE] No se ha podido confirmar la sesión de pago:", err.message);
   }
