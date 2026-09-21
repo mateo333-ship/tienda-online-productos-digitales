@@ -44,21 +44,67 @@ export function getStripeClient() {
 }
 
 /**
- * Marca un pedido como pagado, vacía el carrito y entrega la compra por
- * email — TODO en un único sitio para que da igual por qué camino llegue
- * la confirmación (webhook o vuelta del cliente a /cuenta), el resultado
- * es siempre el mismo.
+ * El nombre, email y teléfono del comprador ya NO se piden en nuestro
+ * propio carrito: se piden directamente en la pantalla de pago de
+ * Stripe (email de contacto + teléfono, ambos nativos de Checkout, y
+ * "Nombre completo" como campo personalizado — ver /api/checkout), así
+ * el cliente rellena todo en un único sitio junto al código de
+ * descuento. Esta función saca esos datos de la Checkout Session que
+ * Stripe nos devuelve (por el webhook o al recuperar la sesión), tanto
+ * si viene del webhook como de `confirmCheckoutSession`.
+ */
+export function extractBuyerInfoFromSession(session) {
+  const email = session.customer_details?.email || null;
+  if (!email) return null;
+
+  const nameField = session.custom_fields?.find((f) => f.key === "nombre_completo");
+  const name = nameField?.text?.value?.trim() || session.customer_details?.name || "Cliente";
+  const phone = session.customer_details?.phone || null;
+  // `customer` es el Cliente de Stripe que se crea automáticamente al
+  // pagar (`customer_creation: "always"`, ver /api/checkout): lo usamos
+  // para completarle el nombre y el teléfono, que Stripe no rellena solo
+  // a partir de un campo personalizado como "Nombre completo".
+  const stripeCustomerId = typeof session.customer === "string" ? session.customer : null;
+
+  return { name, email, phone, stripeCustomerId };
+}
+
+/**
+ * Marca un pedido como pagado, guarda quién lo compró (con los datos que
+ * Stripe acaba de recoger en su propia pantalla de pago), vacía el
+ * carrito y entrega la compra por email — TODO en un único sitio para
+ * que da igual por qué camino llegue la confirmación (webhook o vuelta
+ * del cliente a /cuenta), el resultado es siempre el mismo.
  *
  * Es idempotente a propósito: si el pedido YA estaba "pagado" (porque el
  * otro camino se adelantó), no hace nada más — así nunca se manda el
  * email de entrega dos veces aunque el webhook y la vuelta del cliente
  * lleguen casi a la vez.
  */
-export async function deliverPaidOrder(order) {
+export async function deliverPaidOrder(order, buyerInfo) {
   if (!order || order.status === "pagado") return;
 
-  await setOrderStatus(order.id, "pagado");
+  const finalBuyerInfo = buyerInfo
+    ? { name: buyerInfo.name, email: buyerInfo.email, phone: buyerInfo.phone }
+    : order.buyerInfo;
+
+  await setOrderStatus(order.id, "pagado", finalBuyerInfo ? { buyerInfo: finalBuyerInfo } : {});
   await clearCartForUser(order.userId);
+
+  // El nombre (y el teléfono, si lo dio) se completan también en el
+  // Cliente de Stripe correspondiente, para que se vean en el panel de
+  // Stripe (Clientes / ficha del pago) y no solo en esta web.
+  if (buyerInfo?.stripeCustomerId && isStripeConfigured()) {
+    try {
+      const stripe = getStripeClient();
+      await stripe.customers.update(buyerInfo.stripeCustomerId, {
+        name: buyerInfo.name,
+        phone: buyerInfo.phone || undefined,
+      });
+    } catch (err) {
+      console.error("[STRIPE] No se ha podido actualizar el nombre/teléfono del cliente:", err.message);
+    }
+  }
 
   // Cada producto lleva su propio enlace de acceso (campo `accessUrl`
   // del catálogo), así que si el pedido tiene varias guías distintas,
@@ -69,18 +115,18 @@ export async function deliverPaidOrder(order) {
     accessUrl: getProductBySlug(item.slug)?.accessUrl || null,
   }));
 
-  if (order.buyerInfo?.email) {
+  if (finalBuyerInfo?.email) {
     try {
       await sendOrderDeliveryEmail({
-        toEmail: order.buyerInfo.email,
-        toName: order.buyerInfo.name,
+        toEmail: finalBuyerInfo.email,
+        toName: finalBuyerInfo.name,
         items,
       });
     } catch (err) {
       console.error("[MAIL] No se ha podido enviar el email de entrega:", err.message);
     }
   } else {
-    console.error(`[MAIL] Pedido ${order.id} pagado sin buyerInfo.email: no se ha podido entregar por email.`);
+    console.error(`[MAIL] Pedido ${order.id} pagado sin email de entrega: no se ha podido entregar por email.`);
   }
 }
 
@@ -111,7 +157,7 @@ export async function confirmCheckoutSession(sessionId, userId) {
     const order = await findOrderById(orderId);
     if (!order || order.userId !== userId) return;
 
-    await deliverPaidOrder(order);
+    await deliverPaidOrder(order, extractBuyerInfoFromSession(session));
   } catch (err) {
     console.error("[STRIPE] No se ha podido confirmar la sesión de pago:", err.message);
   }

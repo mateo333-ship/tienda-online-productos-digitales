@@ -238,11 +238,13 @@ que esto funcione.
 
 Cómo encaja todo:
 
-1. En el propio carrito, antes de pagar, se le pide al cliente su
-   **nombre**, el **email al que quiere que le llegue el acceso** (no
-   tiene por qué ser el mismo con el que inició sesión) y su
-   **teléfono** (opcional). Sin nombre y un email válido, no se puede
-   pagar.
+1. El nombre, el email y el teléfono del comprador NO se piden en el
+   carrito: se piden directamente en la propia pantalla de pago de
+   Stripe, junto al código de descuento — todo en un único sitio. El
+   email y el teléfono son campos nativos de Stripe Checkout
+   (`phone_number_collection`), y el nombre es un campo personalizado
+   ("Nombre completo") que se añade a esa misma pantalla — ver
+   `src/app/api/checkout/route.js`.
 2. Cada producto del catálogo (`src/lib/products.js`) tiene un campo
    opcional `accessUrl` con el enlace real donde vive ese producto (un
    Google Drive, una página propia, lo que sea). Para añadírselo a un
@@ -251,12 +253,14 @@ Cómo encaja todo:
    accessUrl: "https://tu-enlace-real-aqui.com",
    ```
 3. En cuanto Stripe confirma el pago (por el webhook, o al volver el
-   cliente a `/cuenta`), se manda un único email al comprador con un
-   bloque por cada producto distinto que haya comprado — así, si compra
-   dos guías a la vez, le llegan sus dos enlaces bien separados, cada
-   uno debajo del nombre de su producto correspondiente. Si algún
-   producto todavía no tiene `accessUrl` puesto, ese bloque avisa de que
-   se le contactará a mano en su lugar, en vez de salir vacío.
+   cliente a `/cuenta`), se leen esos datos de la propia sesión de pago
+   (`extractBuyerInfoFromSession` en `src/server/payments/stripe.js`) y
+   se manda un único email al comprador con un bloque por cada producto
+   distinto que haya comprado — así, si compra dos guías a la vez, le
+   llegan sus dos enlaces bien separados, cada uno debajo del nombre de
+   su producto correspondiente. Si algún producto todavía no tiene
+   `accessUrl` puesto, ese bloque avisa de que se le contactará a mano
+   en su lugar, en vez de salir vacío.
 4. Ese mismo enlace (si el pedido ya está pagado) se muestra también en
    "Mi cuenta" como respaldo, por si el email no llegara.
 5. Esto es idempotente a propósito (ver `deliverPaidOrder` en
@@ -264,18 +268,18 @@ Cómo encaja todo:
    cliente a `/cuenta` lleguen casi a la vez, el email de entrega se
    manda una sola vez por pedido.
 6. El nombre, el email y el teléfono también quedan visibles dentro del
-   propio panel de Stripe: al iniciar el pago se crea (o se reutiliza,
-   si ya compró antes) un **Cliente de Stripe** con esos datos, así que
-   aparecen tanto en la pestaña **Clientes** como en la ficha de cada
-   pago. El nombre y el teléfono se repiten además en los "metadatos"
-   del pago, para verlos de un vistazo sin entrar en la ficha del
-   cliente.
+   propio panel de Stripe: al pagar, Stripe crea automáticamente un
+   **Cliente de Stripe** (`customer_creation: "always"`) con el email y
+   el teléfono recogidos en su pantalla; en cuanto se confirma el pago,
+   esta web le añade también el nombre. Así aparecen tanto en la
+   pestaña **Clientes** como en la ficha de cada pago, dentro del panel
+   de Stripe — sin tener que entrar a esta web para verlos.
 
 Si algún día quieres pedir más datos del comprador (por ejemplo su
-usuario de Vinted/Wallapop), el formulario está en
-`src/app/carrito/page.js` y se guarda todo en `buyerInfo` dentro del
-pedido — solo hay que añadir el campo nuevo ahí y en la validación de
-`src/app/api/checkout/route.js`.
+usuario de Vinted/Wallapop), se añaden como otro campo personalizado más
+en `custom_fields`, dentro de `src/app/api/checkout/route.js`, y se leen
+igual que el nombre en `extractBuyerInfoFromSession` (`src/server/
+payments/stripe.js`).
 
 ## Qué hay construido y qué es todavía una maqueta
 

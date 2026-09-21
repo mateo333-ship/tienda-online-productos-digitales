@@ -6,42 +6,20 @@ import { getProductBySlug } from "@/lib/products";
 import { getStripeClient, isStripeConfigured } from "@/server/payments/stripe";
 import { safeRoute } from "@/server/http/safe-route";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// Nombre, email de entrega y teléfono (opcional) que el cliente rellena
-// en el propio carrito antes de pagar: es a ese email (no necesariamente
-// el de la cuenta) a donde se manda el acceso a lo comprado en cuanto
-// Stripe confirma el pago. Nombre y email son obligatorios: sin ellos no
-// hay forma de saber a quién ni a dónde entregar la compra.
-function sanitizeBuyerInfo(raw) {
-  if (!raw || typeof raw !== "object") return null;
-  const name = String(raw.name ?? "").trim().slice(0, 120);
-  const email = String(raw.email ?? "").trim().slice(0, 200);
-  const phone = String(raw.phone ?? "").trim().slice(0, 40);
-  if (!name || !EMAIL_RE.test(email)) return null;
-  return { name, email, phone: phone || null };
-}
-
 // Inicia el pago de TODO el carrito de una vez: un único Checkout Session
 // de Stripe con varios `line_items` (uno por producto), así que el
 // cliente hace un solo pago que cubre todo, no uno por producto.
+//
+// El nombre, el email de entrega y el teléfono del comprador NO se piden
+// aquí ni en el carrito: se piden directamente en la propia pantalla de
+// pago de Stripe (email de contacto + teléfono, nativos de Checkout, y
+// "Nombre completo" como campo personalizado, más abajo), junto al
+// código de descuento — todo en un único sitio. Stripe nos los devuelve
+// después, al confirmar el pago (ver deliverPaidOrder en
+// src/server/payments/stripe.js).
 export const POST = safeRoute(async (req) => {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-
-  let body = {};
-  try {
-    body = await req.json();
-  } catch {
-    body = {};
-  }
-  const buyerInfo = sanitizeBuyerInfo(body.buyerInfo);
-  if (!buyerInfo) {
-    return NextResponse.json(
-      { error: "Faltan tu nombre y un email válido para poder entregarte la compra." },
-      { status: 400 }
-    );
-  }
 
   const cartItems = await getCartForUser(user.id);
   if (cartItems.length === 0) {
@@ -72,13 +50,11 @@ export const POST = safeRoute(async (req) => {
   if (!isStripeConfigured()) {
     // Modo demo: sin Stripe configurado (ver README), seguimos guardando
     // el pedido directamente como hasta ahora, sin cobro real, para que
-    // el resto de la web se pueda seguir probando sin cortar nada.
-    const order = await createOrderForUser(user.id, {
-      items: resolvedItems,
-      total,
-      status: "pendiente",
-      buyerInfo,
-    });
+    // el resto de la web se pueda seguir probando sin cortar nada. Aquí
+    // no hay pantalla de Stripe que recoja nombre/email/teléfono, así
+    // que el pedido se guarda sin `buyerInfo` (no hay a quién entregarlo
+    // por email en modo demo).
+    const order = await createOrderForUser(user.id, { items: resolvedItems, total, status: "pendiente" });
     await clearCartForUser(user.id);
     return NextResponse.json({ ok: true, mode: "demo", order });
   }
@@ -90,7 +66,6 @@ export const POST = safeRoute(async (req) => {
     items: resolvedItems,
     total,
     status: "pendiente_pago",
-    buyerInfo,
   });
 
   // Si Stripe fallara justo aquí (clave mal puesta, sin conexión, etc.),
@@ -101,30 +76,11 @@ export const POST = safeRoute(async (req) => {
     const origin = req.headers.get("origin") || new URL(req.url).origin;
     const stripe = getStripeClient();
 
-    // Para que el nombre y el teléfono también se vean en el propio
-    // panel de Stripe (no solo en "Mi cuenta" de esta web), se los
-    // asociamos a un Cliente de Stripe en vez de mandar solo el email
-    // suelto. Si ya existe un cliente de Stripe con ese email (compró
-    // antes), se reutiliza y se actualiza con los datos más recientes,
-    // en lugar de crear uno nuevo cada vez.
-    const existing = await stripe.customers.list({ email: buyerInfo.email, limit: 1 });
-    const customer = existing.data[0]
-      ? await stripe.customers.update(existing.data[0].id, {
-          name: buyerInfo.name,
-          phone: buyerInfo.phone || undefined,
-        })
-      : await stripe.customers.create({
-          name: buyerInfo.name,
-          email: buyerInfo.email,
-          phone: buyerInfo.phone || undefined,
-        });
-
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      // Al llevar un Cliente de Stripe (en vez de solo `customer_email`),
-      // el nombre, email y teléfono aparecen directamente en la ficha del
-      // pago y en "Clientes" dentro del panel de Stripe.
-      customer: customer.id,
+      // Sin `customer` ni `customer_email`: así el campo de email queda
+      // editable en la propia pantalla de Stripe, en vez de venir ya
+      // fijado desde aquí.
       line_items: resolvedItems.map((item) => ({
         quantity: item.quantity,
         price_data: {
@@ -133,18 +89,25 @@ export const POST = safeRoute(async (req) => {
           product_data: { name: item.name },
         },
       })),
+      // Pide el teléfono en la propia pantalla de pago.
+      phone_number_collection: { enabled: true },
+      // Campo personalizado para el nombre completo, junto a los demás
+      // datos — así no hace falta un formulario aparte en el carrito.
+      custom_fields: [
+        {
+          key: "nombre_completo",
+          label: { type: "custom", custom: "Nombre completo" },
+          type: "text",
+          optional: false,
+        },
+      ],
+      // Crea automáticamente un Cliente de Stripe con los datos que el
+      // comprador acaba de rellenar (email, teléfono...), para que
+      // también se vean en "Clientes" dentro del panel de Stripe.
+      customer_creation: "always",
       success_url: `${origin}/cuenta?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/carrito?pago=cancelado`,
-      // Nombre y teléfono se repiten también aquí, en los metadatos:
-      // así, si abres directamente la pantalla de un pago concreto en
-      // Stripe, los ves de un vistazo sin tener que entrar en la ficha
-      // del cliente.
-      metadata: {
-        orderId: order.id,
-        userId: user.id,
-        buyerName: buyerInfo.name,
-        buyerPhone: buyerInfo.phone || "",
-      },
+      metadata: { orderId: order.id, userId: user.id },
       // Muestra en la propia pantalla de pago de Stripe un campo para
       // introducir un código de descuento (como el DIGITAL10 del banner y
       // del carrito). Para que ese código funcione de verdad hay que

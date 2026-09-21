@@ -43,11 +43,19 @@ export async function findOrderById(orderId) {
   return orders.find((o) => o.id === orderId) ?? null;
 }
 
-export async function setOrderStatus(orderId, status) {
+/**
+ * `extra` deja actualizar otros campos del pedido a la vez que el
+ * estado — hoy se usa para guardar `buyerInfo` (nombre/email/teléfono)
+ * en el momento en que Stripe los confirma, ya que ahora se piden en la
+ * propia pantalla de pago en vez de en el carrito (ver deliverPaidOrder
+ * en src/server/payments/stripe.js).
+ */
+export async function setOrderStatus(orderId, status, extra = {}) {
   const orders = await readJsonStore(ORDERS_FILE, []);
   const order = orders.find((o) => o.id === orderId);
   if (!order) return null;
   order.status = status;
+  Object.assign(order, extra);
   await writeJsonStore(ORDERS_FILE, orders);
   return order;
 }

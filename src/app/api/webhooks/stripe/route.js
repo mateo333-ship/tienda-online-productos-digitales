@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { getStripeClient, isStripeConfigured, deliverPaidOrder } from "@/server/payments/stripe";
+import {
+  getStripeClient,
+  isStripeConfigured,
+  deliverPaidOrder,
+  extractBuyerInfoFromSession,
+} from "@/server/payments/stripe";
 import { setOrderStatus, findOrderById } from "@/server/auth/orders-repo";
 
 /**
@@ -53,7 +58,7 @@ export async function POST(req) {
         // adelantó a este webhook, aquí simplemente no se hace nada más
         // (y sobre todo, no se manda el email de entrega dos veces).
         if (order && (!userId || order.userId === userId)) {
-          await deliverPaidOrder(order);
+          await deliverPaidOrder(order, extractBuyerInfoFromSession(session));
         }
       }
     } else if (event.type === "checkout.session.async_payment_failed") {
