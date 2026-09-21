@@ -155,6 +155,51 @@ En tu ordenador no tienes que hacer nada de esto: si no existe
 ninguna de esas variables, la web sigue usando el modo demo (código
 en pantalla) automáticamente, como hasta ahora.
 
+### 4. Cobrar con tarjeta (Stripe)
+
+Sin esto, el botón "Pagar todo el carrito" sigue funcionando en modo
+demo: guarda el pedido en la cuenta del cliente pero sin cobrar nada de
+verdad. Con Stripe configurado, ese mismo botón lleva a una pantalla de
+pago real de Stripe donde el cliente paga **todo el carrito de una
+vez, con un único pago** (aunque haya varios productos distintos) —
+nunca se cobra producto a producto.
+
+1. Crea una cuenta en [stripe.com](https://stripe.com). Al principio
+   está en **modo de prueba** (arriba a la derecha del panel pone "Modo
+   de prueba" / "Test mode") — así puedes probar todo el flujo con
+   tarjetas de prueba antes de activar cobros de verdad.
+2. Ve a **Desarrolladores** → **Claves de API** (`Developers` →
+   `API keys`). Copia la **clave secreta** (empieza por `sk_test_...`
+   en modo de prueba, o `sk_live_...` cuando actives pagos reales).
+3. En Vercel: tu proyecto → **Settings** → **Environment Variables** →
+   añade `STRIPE_SECRET_KEY` con esa clave.
+4. Ahora el webhook, para que Stripe pueda avisar a la web cuando un
+   pago se confirma de verdad (esto es lo que marca el pedido como
+   "Pagado" en la cuenta del cliente):
+   - En el panel de Stripe: **Desarrolladores** → **Webhooks** → **Add
+     endpoint** (o **Añadir endpoint**).
+   - URL del endpoint: `https://TU-DOMINIO.vercel.app/api/webhooks/stripe`
+     (con tu dominio real de Vercel).
+   - Eventos a escuchar: añade `checkout.session.completed`,
+     `checkout.session.async_payment_succeeded` y
+     `checkout.session.async_payment_failed`.
+   - Al crearlo, Stripe te muestra una **clave de firma del webhook**
+     (empieza por `whsec_...`) — cópiala.
+5. En Vercel, añade `STRIPE_WEBHOOK_SECRET` con esa clave de firma.
+6. Haz un **redeploy**.
+
+Para probarlo en modo de prueba, Stripe tiene tarjetas de prueba que
+nunca cobran de verdad — la más usada es `4242 4242 4242 4242`, con
+cualquier fecha futura y cualquier CVC. Cuando quieras cobrar de verdad,
+activa la cuenta de Stripe (te pedirá tus datos bancarios y fiscales) y
+repite los pasos 2 y 4 con las claves de **modo real** (`sk_live_...` /
+el webhook creado en modo real).
+
+Igual que con Firebase y Brevo: si algo falla (clave mal puesta, etc.),
+el pedido no se cobra ni se crea a medias — el cliente ve un aviso claro
+y puede volver a intentarlo, y el error real queda en los Logs de
+Vercel.
+
 ## Qué hay construido y qué es todavía una maqueta
 
 Para que puedas probar la tienda entera hoy mismo, sin depender de nada
@@ -167,7 +212,7 @@ producción. Aquí está la lista completa, sin sorpresas:
 | Cuentas de cliente, contraseñas, sesiones | **Real y funcional**: contraseñas con hash bcrypt, sesión cifrada, verificación por email | Ninguna, esto ya está bien hecho — solo falta desplegar con HTTPS |
 | Envío del código de verificación | **Real y a cualquier cliente si configuras `BREVO_API_KEY`** (ver "Poner la tienda en producción" más arriba, no hace falta dominio propio); si no, se escribe en la consola del servidor y se muestra en pantalla solo en desarrollo | Nada obligatorio — opcionalmente, un dominio propio verificado (en Brevo o Resend) mejora la entrega |
 | Guardado de usuarios y pedidos | Ficheros JSON en local; en Vercel usa Firebase Realtime Database si configuras las variables de entorno (ver "Poner la tienda en producción" más arriba) | Puedes seguir así, o migrar a otra base de datos más adelante — el código ya está organizado para que ese cambio sea pequeño (ver abajo) |
-| Pago | No implementado — "confirmar pedido" solo guarda el pedido | Conectar una pasarela de pago (Stripe, Redsys...) |
+| Pago | **Real con Stripe si configuras `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET`** (ver "Poner la tienda en producción" más arriba): un único pago cubre todo el carrito, con varios productos a la vez; si no, sigue en modo demo (guarda el pedido sin cobrar) | Nada obligatorio para probar; para cobrar de verdad, activar la cuenta de Stripe con datos bancarios/fiscales y usar las claves de modo real |
 
 ## Cómo está protegida la cuenta de cada cliente
 

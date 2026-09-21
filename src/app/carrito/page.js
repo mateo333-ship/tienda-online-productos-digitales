@@ -9,6 +9,16 @@ import { useLoading } from "@/components/loading-overlay";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 
+// Si Stripe nos devuelve aquí tras cancelar el pago, lo leemos solo en el
+// navegador (no hace falta que este aviso pase por el servidor). La página
+// ya no renderiza nada hasta que el carrito está listo (`ready`), así que
+// este valor inicial "perezoso" nunca puede desajustarse con lo que
+// hubiera mandado el servidor.
+function readCancelledFromUrl() {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("pago") === "cancelado";
+}
+
 export default function CarritoPage() {
   const { items, updateQuantity, removeItem, total, clearCart, ready } = useCart();
   const { user } = useSession();
@@ -16,6 +26,7 @@ export default function CarritoPage() {
   const router = useRouter();
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
+  const [cancelled] = useState(readCancelledFromUrl);
 
   async function handleCheckout() {
     if (!user) {
@@ -26,13 +37,20 @@ export default function CarritoPage() {
     setError("");
     try {
       await withLoading(async () => {
-        const res = await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items }),
-        });
+        const res = await fetch("/api/checkout", { method: "POST" });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "No se ha podido crear el pedido.");
+        if (!res.ok) throw new Error(data.error || "No se ha podido iniciar el pago.");
+
+        if (data.mode === "stripe") {
+          // Salimos de la web hacia la página de pago de Stripe. El
+          // overlay de carga se queda visible hasta ese momento, así que
+          // no hace falta "apagarlo" a mano aquí.
+          window.location.href = data.url;
+          return;
+        }
+
+        // Modo demo (Stripe todavía no configurado): el pedido ya se ha
+        // guardado directamente en el servidor.
         clearCart();
         router.push("/cuenta");
       });
@@ -48,6 +66,12 @@ export default function CarritoPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
       <h1 className="font-serif text-4xl">Tu carrito</h1>
+
+      {cancelled && (
+        <p className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--ink-soft)]">
+          Has cancelado el pago. Tu carrito sigue aquí tal cual lo dejaste.
+        </p>
+      )}
 
       {!user ? (
         <p className="mt-6 text-[var(--ink-soft)]">
@@ -102,11 +126,11 @@ export default function CarritoPage() {
 
           <div className="pt-2">
             <Button onClick={handleCheckout} disabled={placing}>
-              {placing ? "Procesando…" : "Confirmar pedido"}
+              {placing ? "Procesando…" : "Pagar todo el carrito"}
             </Button>
           </div>
           <p className="text-xs text-[var(--ink-soft)]">
-            El pago todavía no está conectado — esto guarda el pedido en tu cuenta como demo.
+            Un único pago seguro cubre todos los productos del carrito, sin cobros por separado.
           </p>
         </div>
       )}

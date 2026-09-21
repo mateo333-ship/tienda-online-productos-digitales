@@ -14,17 +14,35 @@ export async function listOrdersForUser(userId) {
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
-export async function createOrderForUser(userId, { items, total }) {
+export async function createOrderForUser(userId, { items, total, status = "pendiente" }) {
   const orders = await readJsonStore(ORDERS_FILE, []);
   const order = {
     id: randomUUID(),
     userId,
     items,
     total,
-    status: "pendiente",
+    status,
     createdAt: Date.now(),
   };
   orders.push(order);
+  await writeJsonStore(ORDERS_FILE, orders);
+  return order;
+}
+
+/** Busca un pedido por id, sin filtrar por usuario — solo para uso interno
+ * desde el webhook de Stripe (que llega del propio Stripe, no del
+ * navegador de un cliente). Ninguna ruta pública debe exponer esto tal
+ * cual sin comprobar antes a quién pertenece el pedido. */
+export async function findOrderById(orderId) {
+  const orders = await readJsonStore(ORDERS_FILE, []);
+  return orders.find((o) => o.id === orderId) ?? null;
+}
+
+export async function setOrderStatus(orderId, status) {
+  const orders = await readJsonStore(ORDERS_FILE, []);
+  const order = orders.find((o) => o.id === orderId);
+  if (!order) return null;
+  order.status = status;
   await writeJsonStore(ORDERS_FILE, orders);
   return order;
 }

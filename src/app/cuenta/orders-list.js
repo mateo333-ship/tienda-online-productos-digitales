@@ -5,6 +5,28 @@ import Link from "next/link";
 import { useLoading } from "@/components/loading-overlay";
 import { formatPrice } from "@/lib/utils";
 
+const STATUS_LABELS = {
+  pendiente: "Pendiente",
+  pendiente_pago: "Pendiente de pago",
+  pagado: "Pagado",
+  fallido: "Pago fallido",
+};
+
+const STATUS_STYLES = {
+  pagado: "bg-[var(--accent)]/15 text-[var(--accent)]",
+  pendiente_pago: "bg-[var(--surface-2)] text-[var(--ink-soft)]",
+  fallido: "bg-rose-500/15 text-rose-400",
+};
+
+function StatusPill({ status }) {
+  const style = STATUS_STYLES[status] ?? "bg-[var(--surface-2)] text-[var(--ink)]";
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-medium ${style}`}>
+      {STATUS_LABELS[status] ?? status}
+    </span>
+  );
+}
+
 /**
  * Lista de pedidos de "Mi cuenta", con opción de eliminar cada uno.
  * Recibe los pedidos iniciales ya cargados en el servidor (por sesión,
@@ -52,9 +74,7 @@ export function OrdersList({ initialOrders }) {
         <div key={order.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
           <div className="flex items-center justify-between text-sm text-[var(--ink-soft)]">
             <span>{new Date(order.createdAt).toLocaleDateString("es-ES")}</span>
-            <span className="rounded-full bg-[var(--surface-2)] px-3 py-1 text-xs font-medium capitalize text-[var(--ink)]">
-              {order.status}
-            </span>
+            <StatusPill status={order.status} />
           </div>
           <ul className="mt-3 space-y-1 text-sm">
             {order.items.map((item) => (
