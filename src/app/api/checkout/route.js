@@ -100,12 +100,31 @@ export const POST = safeRoute(async (req) => {
   try {
     const origin = req.headers.get("origin") || new URL(req.url).origin;
     const stripe = getStripeClient();
+
+    // Para que el nombre y el teléfono también se vean en el propio
+    // panel de Stripe (no solo en "Mi cuenta" de esta web), se los
+    // asociamos a un Cliente de Stripe en vez de mandar solo el email
+    // suelto. Si ya existe un cliente de Stripe con ese email (compró
+    // antes), se reutiliza y se actualiza con los datos más recientes,
+    // en lugar de crear uno nuevo cada vez.
+    const existing = await stripe.customers.list({ email: buyerInfo.email, limit: 1 });
+    const customer = existing.data[0]
+      ? await stripe.customers.update(existing.data[0].id, {
+          name: buyerInfo.name,
+          phone: buyerInfo.phone || undefined,
+        })
+      : await stripe.customers.create({
+          name: buyerInfo.name,
+          email: buyerInfo.email,
+          phone: buyerInfo.phone || undefined,
+        });
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      // El email que se usa aquí (y al que se manda la compra al pagar)
-      // es el que el cliente ha escrito en el carrito, que puede no ser
-      // el mismo con el que inició sesión.
-      customer_email: buyerInfo.email,
+      // Al llevar un Cliente de Stripe (en vez de solo `customer_email`),
+      // el nombre, email y teléfono aparecen directamente en la ficha del
+      // pago y en "Clientes" dentro del panel de Stripe.
+      customer: customer.id,
       line_items: resolvedItems.map((item) => ({
         quantity: item.quantity,
         price_data: {
@@ -116,7 +135,16 @@ export const POST = safeRoute(async (req) => {
       })),
       success_url: `${origin}/cuenta?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/carrito?pago=cancelado`,
-      metadata: { orderId: order.id, userId: user.id },
+      // Nombre y teléfono se repiten también aquí, en los metadatos:
+      // así, si abres directamente la pantalla de un pago concreto en
+      // Stripe, los ves de un vistazo sin tener que entrar en la ficha
+      // del cliente.
+      metadata: {
+        orderId: order.id,
+        userId: user.id,
+        buyerName: buyerInfo.name,
+        buyerPhone: buyerInfo.phone || "",
+      },
       // Muestra en la propia pantalla de pago de Stripe un campo para
       // introducir un código de descuento (como el DIGITAL10 del banner y
       // del carrito). Para que ese código funcione de verdad hay que

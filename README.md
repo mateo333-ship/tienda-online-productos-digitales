@@ -263,6 +263,13 @@ Cómo encaja todo:
    `src/server/payments/stripe.js`): aunque el webhook y la vuelta del
    cliente a `/cuenta` lleguen casi a la vez, el email de entrega se
    manda una sola vez por pedido.
+6. El nombre, el email y el teléfono también quedan visibles dentro del
+   propio panel de Stripe: al iniciar el pago se crea (o se reutiliza,
+   si ya compró antes) un **Cliente de Stripe** con esos datos, así que
+   aparecen tanto en la pestaña **Clientes** como en la ficha de cada
+   pago. El nombre y el teléfono se repiten además en los "metadatos"
+   del pago, para verlos de un vistazo sin entrar en la ficha del
+   cliente.
 
 Si algún día quieres pedir más datos del comprador (por ejemplo su
 usuario de Vinted/Wallapop), el formulario está en
