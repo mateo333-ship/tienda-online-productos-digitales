@@ -22,7 +22,7 @@ const PRODUCTS = [
     // y src/server/auth/mailer.js). Si algún producto no trae este campo,
     // el email avisa de que se le contactará a mano en su lugar, así que
     // añadir esto no es obligatorio para que la tienda funcione.
-    accessUrl: null, // TODO: pon aquí el enlace real de la guía
+    accessUrl: "https://guia-reventa-vinted-wallapop.vercel.app/",
 
     description:
       "¿Quieres dejar de vender solo lo que te sobra y empezar a generar ingresos reales mes a mes? Esta guía digital interactiva (Edición 2026) te enseña el método completo y repetible para convertir la compraventa de segunda mano en un negocio rentable, vendas ropa, zapatillas o tecnología — nada de PDF teórico y aburrido.",
