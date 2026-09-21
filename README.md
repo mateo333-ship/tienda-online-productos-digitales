@@ -200,6 +200,34 @@ el pedido no se cobra ni se crea a medias — el cliente ve un aviso claro
 y puede volver a intentarlo, y el error real queda en los Logs de
 Vercel.
 
+#### El código de descuento DIGITAL10
+
+El banner de arriba de la web y la página del carrito anuncian el
+código `DIGITAL10` (10% de descuento). La pantalla de pago de Stripe ya
+tiene activado el campo para introducir códigos de descuento, pero para
+que ese código funcione de verdad hay que crearlo una vez en tu panel
+de Stripe (si no, el campo existe pero cualquier código que se escriba
+ahí dará "código no válido"):
+
+1. En el panel de Stripe: **Catálogo de productos** → **Cupones**
+   (`Product catalog` → `Coupons`) → **Crear cupón** (`Create coupon`).
+2. Tipo de descuento: **Porcentaje**, valor **10%**. Duración: **Una
+   vez** (`Once`), para que solo se aplique al primer pago del cliente.
+   Guarda.
+3. Dentro de ese cupón (o en **Códigos promocionales** /
+   `Promotion codes` → **Crear código promocional**), crea un código
+   promocional con el texto exacto `DIGITAL10` (en mayúsculas) enlazado
+   al cupón del 10% que acabas de crear.
+4. Recuerda crear este mismo cupón y código tanto en **modo de prueba**
+   (para probarlo tú) como en **modo real** (para que funcione con
+   clientes de verdad) — son catálogos independientes en Stripe.
+
+Si en algún momento cambias el código, o el banner, recuerda que son
+dos cosas independientes: el texto del banner (`src/components/
+promo-banner.js` y `src/app/carrito/page.js`) es solo un aviso visual,
+y el código promocional de Stripe es lo que de verdad aplica el
+descuento — hay que mantener los dos iguales a mano.
+
 ## Qué hay construido y qué es todavía una maqueta
 
 Para que puedas probar la tienda entera hoy mismo, sin depender de nada

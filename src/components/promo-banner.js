@@ -8,7 +8,7 @@ const REPEATS = Array.from({ length: 6 });
 export function PromoBanner() {
   return (
     <div className="overflow-hidden border-b border-[var(--border)] bg-[var(--ink)] py-2 text-[var(--background)]">
-      <div className="flex w-max motion-safe:animate-[promo-marquee_22s_linear_infinite]">
+      <div className="flex w-max motion-safe:animate-[promo-marquee_48s_linear_infinite]">
         {[0, 1].map((copy) => (
           <div key={copy} className="flex shrink-0 items-center" aria-hidden={copy === 1}>
             {REPEATS.map((_, i) => (

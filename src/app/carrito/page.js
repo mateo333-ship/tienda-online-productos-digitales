@@ -90,6 +90,11 @@ export default function CarritoPage() {
         </p>
       ) : (
         <div className="mt-8 space-y-4">
+          <p className="rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-4 py-3 text-sm">
+            ✨ Usa el código <strong className="font-semibold">DIGITAL10</strong> en el pago para
+            conseguir un 10% de descuento.
+          </p>
+
           {items.map((item) => (
             <div
               key={item.slug}

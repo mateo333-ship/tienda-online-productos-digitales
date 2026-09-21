@@ -78,6 +78,12 @@ export const POST = safeRoute(async (req) => {
       success_url: `${origin}/cuenta?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/carrito?pago=cancelado`,
       metadata: { orderId: order.id, userId: user.id },
+      // Muestra en la propia pantalla de pago de Stripe un campo para
+      // introducir un código de descuento (como el DIGITAL10 del banner y
+      // del carrito). Para que ese código funcione de verdad hay que
+      // crearlo una vez en el panel de Stripe — ver README, sección
+      // "Cobrar con tarjeta (Stripe)".
+      allow_promotion_codes: true,
     });
 
     return NextResponse.json({ ok: true, mode: "stripe", url: session.url });
