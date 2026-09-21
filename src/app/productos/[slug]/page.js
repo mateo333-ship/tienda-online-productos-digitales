@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getAllProducts, getProductBySlug } from "@/lib/products";
 import { formatPrice } from "@/lib/utils";
@@ -21,7 +22,22 @@ export default async function ProductoPage({ params }) {
   return (
     <div className="mx-auto max-w-6xl px-6 py-16">
       <div className="grid gap-12 lg:grid-cols-2">
-        <div className={`aspect-square rounded-3xl bg-[var(--surface)] bg-gradient-to-br ${product.accent}`} />
+        {/* Igual que en la tarjeta del catálogo: foto real si existe
+            (`image`), degradado de color si no. */}
+        <div className="relative aspect-square overflow-hidden rounded-3xl bg-[var(--surface)]">
+          {product.image ? (
+            <Image
+              src={product.image}
+              alt={product.name}
+              fill
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              priority
+              className="object-cover"
+            />
+          ) : (
+            <div className={`h-full w-full bg-gradient-to-br ${product.accent}`} />
+          )}
+        </div>
 
         <div>
           <p className="text-xs uppercase tracking-wide text-[var(--ink-soft)]">
@@ -43,8 +59,30 @@ export default async function ProductoPage({ params }) {
           <div className="mt-8">
             <AddToCartButton product={product} />
           </div>
+          <p className="mt-3 text-xs text-[var(--ink-soft)]">
+            📩 Acceso inmediato: al ser un producto 100% digital, lo recibes al instante tras la
+            compra.
+          </p>
         </div>
       </div>
+
+      {/* "Qué vas a dominar": solo los productos tipo curso/ebook traen este
+          temario (campo `highlights`); el resto de la ficha no cambia si no
+          existe, así que esto no rompe los productos de ejemplo. */}
+      {product.highlights?.length > 0 && (
+        <div className="mt-16 border-t border-[var(--border)] pt-12">
+          <h2 className="font-serif text-2xl">¿Qué vas a dominar con esta guía?</h2>
+          <div className="mt-8 grid gap-6 sm:grid-cols-2">
+            {product.highlights.map((h) => (
+              <div key={h.title} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+                <p className="text-2xl">{h.emoji}</p>
+                <h3 className="mt-3 font-medium">{h.title}</h3>
+                <p className="mt-2 text-sm text-[var(--ink-soft)]">{h.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

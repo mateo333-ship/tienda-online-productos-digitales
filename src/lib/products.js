@@ -11,14 +11,45 @@
 
 const PRODUCTS = [
   {
-    slug: "vela-ambar",
-    name: "Vela Ámbar",
-    category: "Velas",
-    price: 2400,
+    slug: "guia-reventa-vinted-wallapop",
+    name: "GUIA DE REVENTA: Revende como un PRO en Vinted y Wallapop 🚀",
+    category: "Formación y Negocios",
+    price: 990,
+    image: "/products/guia-reventa-vinted-wallapop.jpg",
     description:
-      "Vela de cera de soja con notas de ámbar y madera de sándalo. Combustión limpia de hasta 45 horas.",
-    details: ["Cera de soja 100% natural", "Mecha de algodón sin plomo", "45h de combustión", "Hecha a mano"],
-    accent: "from-amber-500/30 to-orange-700/30",
+      "¿Quieres dejar de vender solo lo que te sobra y empezar a generar ingresos reales mes a mes? Esta guía digital interactiva (Edición 2026) te enseña el método completo y repetible para convertir la compraventa de segunda mano en un negocio rentable, vendas ropa, zapatillas o tecnología — nada de PDF teórico y aburrido.",
+    // "Qué vas a dominar": el temario en forma de bloques, pensado para
+    // una guía/curso — los productos físicos de ejemplo no usan este
+    // campo, así que la página de producto solo lo muestra si existe.
+    highlights: [
+      {
+        emoji: "🛒",
+        title: "Los Cimientos (Sourcing)",
+        text: "Qué nichos funcionan (y cuáles evitar), cómo calcular tu margen real y las 6 fuentes clave para comprar barato.",
+      },
+      {
+        emoji: "📸",
+        title: "El Anuncio Perfecto",
+        text: "Fotos que generan confianza, y cómo estructurar títulos y descripciones con el SEO adecuado para posicionarte el primero.",
+      },
+      {
+        emoji: "🤝",
+        title: "Cerrar la Venta",
+        text: "Negocia sin regalar tu margen, detecta estafas al instante y gestiona envíos y empaquetado de forma impecable.",
+      },
+      {
+        emoji: "📈",
+        title: "Escalar el Negocio",
+        text: "Organización, adaptación a la nueva normativa de Hacienda (DAC7) y los errores de novato que más dinero cuestan.",
+      },
+    ],
+    details: [
+      "Formato: guía web interactiva (responsive) — adiós a los PDFs estáticos",
+      "Acceso inmediato y de por vida (incluye futuras actualizaciones de la Edición 2026)",
+      "Incluye Plan de 30 días, plantillas de negociación y checklists interactivas",
+      "Licencia de Reventa (MRR) incluida",
+    ],
+    accent: "from-emerald-500/30 to-teal-700/25",
   },
   {
     slug: "bruma-de-cedro",
