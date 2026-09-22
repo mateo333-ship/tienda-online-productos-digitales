@@ -5,6 +5,10 @@ import { SessionProvider } from "@/components/session-provider";
 import { PromoBanner } from "@/components/promo-banner";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { CookieConsentProvider } from "@/components/cookie-consent-provider";
+import { CookieBanner } from "@/components/cookie-banner";
+import { CookieSettingsButton } from "@/components/cookie-settings-button";
+import { CookiePreferencesModal } from "@/components/cookie-preferences-modal";
 
 // Nota: usamos la pila de fuentes del sistema (definida en globals.css)
 // en lugar de next/font/google para que el proyecto compile sin depender
@@ -24,16 +28,25 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es" className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans">
-        <LoadingProvider>
-          <SessionProvider>
-            <CartProvider>
-              <PromoBanner />
-              <SiteHeader />
-              <main className="flex-1">{children}</main>
-              <SiteFooter />
-            </CartProvider>
-          </SessionProvider>
-        </LoadingProvider>
+        {/* El consentimiento de cookies envuelve todo lo demás: es
+            independiente de la sesión y del carrito, y tanto el aviso
+            inicial como el botón flotante y su panel deben poder verse
+            en cualquier página, esté o no la persona conectada. */}
+        <CookieConsentProvider>
+          <LoadingProvider>
+            <SessionProvider>
+              <CartProvider>
+                <PromoBanner />
+                <SiteHeader />
+                <main className="flex-1">{children}</main>
+                <SiteFooter />
+              </CartProvider>
+            </SessionProvider>
+          </LoadingProvider>
+          <CookieBanner />
+          <CookieSettingsButton />
+          <CookiePreferencesModal />
+        </CookieConsentProvider>
       </body>
     </html>
   );
