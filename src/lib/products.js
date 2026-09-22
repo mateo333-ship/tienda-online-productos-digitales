@@ -60,6 +60,59 @@ const PRODUCTS = [
     accent: "from-emerald-500/30 to-teal-700/25",
   },
   {
+    slug: "guia-interactiva-shopify-2026",
+    name: "Guía Interactiva Shopify: Crea tu Tienda desde Cero y Empieza a Vender",
+    category: "Formación y Negocios",
+    price: 999,
+    // Precio tachado junto al de oferta (ver ProductCard y la ficha de
+    // producto): es opcional, así que los productos que no lo tengan
+    // siguen mostrando solo su precio normal, sin cambiar nada más.
+    compareAtPrice: 1699,
+    image: "/products/guia-shopify-2026.jpg",
+    // Segunda imagen, mostrada más abajo en la propia ficha del producto
+    // como vista previa de cómo es la guía por dentro (opcional, igual
+    // que `image`).
+    secondaryImage: "/products/guia-shopify-2026-interior.png",
+    // Enlace real donde vive el contenido de la guía. Se manda por email
+    // en cuanto se confirma el pago (ver deliverPaidOrder en
+    // src/server/payments/stripe.js) y solo se resuelve en el servidor
+    // (ver cuenta/page.js) — nunca llega al navegador de nadie que no
+    // haya pagado ese pedido en concreto.
+    accessUrl: "https://guia-tienda-shopify.vercel.app/",
+
+    description:
+      "¿Quieres vender por internet pero la parte técnica te frena? Lanza tu propio ecommerce en Shopify sin necesidad de saber programar con esta guía digital interactiva. Es el paso a paso definitivo para pasar de \"no tengo tienda\" a recibir tu primer pedido.",
+    highlights: [
+      {
+        emoji: "⚙️",
+        title: "Configuración Inicial",
+        text: "Abre tu cuenta, elige el plan y configura pagos y envíos sin estrés.",
+      },
+      {
+        emoji: "🎨",
+        title: "Diseño que Vende",
+        text: "Crea una tienda visualmente atractiva que genere confianza al instante.",
+      },
+      {
+        emoji: "📦",
+        title: "Gestión de Productos",
+        text: "Sube tu catálogo y escribe descripciones que conviertan.",
+      },
+      {
+        emoji: "🚀",
+        title: "Lanzamiento",
+        text: "Qué hacer justo después de darle a \"Publicar\" para atraer tráfico.",
+      },
+    ],
+    details: [
+      "Formato: guía web interactiva (responsive)",
+      "Acceso inmediato y de por vida",
+      "Nivel principiante — cero código necesario",
+      "Licencia de Reventa (MRR) incluida",
+    ],
+    accent: "from-sky-500/30 to-indigo-700/25",
+  },
+  {
     slug: "bruma-de-cedro",
     name: "Bruma de Cedro",
     category: "Aromas",

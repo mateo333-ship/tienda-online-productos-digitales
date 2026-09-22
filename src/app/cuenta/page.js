@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth/current-user";
 import { listOrdersForUser } from "@/server/auth/orders-repo";
 import { confirmCheckoutSession } from "@/server/payments/stripe";
+import { getProductBySlug } from "@/lib/products";
 import { LogoutButton } from "./logout-button";
 import { OrdersList } from "./orders-list";
 
@@ -30,6 +31,23 @@ export default async function CuentaPage({ searchParams }) {
   // nunca por algo que se pueda manipular desde el navegador.
   const orders = await listOrdersForUser(user.id);
 
+  // El enlace real de acceso de cada producto se resuelve AQUÍ, en el
+  // servidor, y solo para lo que este usuario ya ha pagado — nunca en
+  // <OrdersList>, que es un componente de cliente. Si ese componente
+  // importara el catálogo completo para mirar el enlace él mismo, todo
+  // ese catálogo (con el enlace privado de CADA producto, comprado o no
+  // por cualquiera) viajaría dentro del propio JavaScript de la página,
+  // un fichero público que cualquiera puede abrir sin haber pagado ni
+  // iniciado sesión. Así, <OrdersList> solo llega a ver el enlace de lo
+  // que de verdad aparece en el pedido de este usuario, nada más.
+  const ordersWithAccess = orders.map((order) => ({
+    ...order,
+    items: order.items.map((item) => ({
+      ...item,
+      accessUrl: order.status === "pagado" ? getProductBySlug(item.slug)?.accessUrl ?? null : null,
+    })),
+  }));
+
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
       {/* En móvil, un nombre largo puede partir "Hola, ..." en dos líneas;
@@ -51,7 +69,7 @@ export default async function CuentaPage({ searchParams }) {
 
       <section className="mt-12">
         <h2 className="text-lg font-medium">Tus pedidos</h2>
-        <OrdersList initialOrders={orders} />
+        <OrdersList initialOrders={ordersWithAccess} />
       </section>
     </div>
   );

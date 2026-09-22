@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useLoading } from "@/components/loading-overlay";
 import { formatPrice } from "@/lib/utils";
-import { getProductBySlug } from "@/lib/products";
 
 const STATUS_LABELS = {
   pendiente: "Pendiente",
@@ -81,8 +80,11 @@ export function OrdersList({ initialOrders }) {
             {order.items.map((item) => {
               // El acceso "de verdad" se manda por email en cuanto se
               // confirma el pago; este enlace es solo un respaldo por si
-              // ese email no llegó o se perdió.
-              const accessUrl = order.status === "pagado" ? getProductBySlug(item.slug)?.accessUrl : null;
+              // ese email no llegó o se perdió. Ya viene resuelto desde
+              // el servidor (ver cuenta/page.js) — este componente nunca
+              // toca el catálogo directamente, para que su enlace privado
+              // no acabe en el JavaScript público de la página.
+              const accessUrl = item.accessUrl;
               return (
                 <li key={item.slug}>
                   <div className="flex justify-between">

@@ -29,7 +29,14 @@ export function ProductCard({ product }) {
       <div className="p-5">
         <p className="text-xs uppercase tracking-wide text-[var(--ink-soft)]">{product.category}</p>
         <h3 className="mt-1 line-clamp-2 font-medium">{product.name}</h3>
-        <p className="mt-2 text-sm font-semibold">{formatPrice(product.price)}</p>
+        {/* `compareAtPrice` es opcional: solo se ve el precio tachado en
+            los productos que están de oferta, como este. */}
+        <p className="mt-2 flex items-baseline gap-2 text-sm">
+          {product.compareAtPrice && (
+            <span className="text-[var(--ink-soft)] line-through">{formatPrice(product.compareAtPrice)}</span>
+          )}
+          <span className="font-semibold">{formatPrice(product.price)}</span>
+        </p>
       </div>
     </Link>
   );

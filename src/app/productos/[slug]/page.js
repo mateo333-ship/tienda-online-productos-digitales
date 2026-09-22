@@ -44,7 +44,16 @@ export default async function ProductoPage({ params }) {
             {product.category}
           </p>
           <h1 className="mt-2 font-serif text-4xl">{product.name}</h1>
-          <p className="mt-4 text-xl font-semibold">{formatPrice(product.price)}</p>
+          {/* `compareAtPrice` es opcional: solo se ve el precio tachado en
+              los productos que están de oferta. */}
+          <p className="mt-4 flex items-baseline gap-3">
+            {product.compareAtPrice && (
+              <span className="text-lg text-[var(--ink-soft)] line-through">
+                {formatPrice(product.compareAtPrice)}
+              </span>
+            )}
+            <span className="text-xl font-semibold">{formatPrice(product.price)}</span>
+          </p>
           <p className="mt-6 max-w-md text-[var(--ink-soft)]">{product.description}</p>
 
           <ul className="mt-6 space-y-2 text-sm text-[var(--ink-soft)]">
@@ -57,7 +66,21 @@ export default async function ProductoPage({ params }) {
           </ul>
 
           <div className="mt-8">
-            <AddToCartButton product={product} />
+            {/* ⚠️ OJO con lo que se le pasa a un Client Component: a
+                diferencia del resto de esta página (que se queda en el
+                servidor y solo manda el HTML ya renderizado), TODO lo que
+                se le pasa como prop a un componente "use client" como
+                `AddToCartButton` viaja tal cual hasta el navegador para
+                poder hidratarlo — aunque ese componente nunca llegue a
+                mostrarlo en pantalla. Pasarle `product` entero mandaría
+                también su `accessUrl` (el enlace real y privado de
+                descarga) al HTML público de la página, visible para
+                cualquiera que la visite sin haber pagado — ni falta
+                inspeccionar nada raro, basta con "ver código fuente". Por
+                eso aquí se le pasa solo lo que el carrito necesita de
+                verdad (`slug`, `name`, `price` — lo único que usa
+                `addItem` en cart-provider.js), nunca el objeto completo. */}
+            <AddToCartButton product={{ slug: product.slug, name: product.name, price: product.price }} />
           </div>
           {/* Recordatorio del código justo en el momento de decidir la
               compra, en el mismo estilo compacto que en el catálogo y el
@@ -87,6 +110,26 @@ export default async function ProductoPage({ params }) {
                 <p className="mt-2 text-sm text-[var(--ink-soft)]">{h.text}</p>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Segunda imagen (`secondaryImage`), opcional: una vista previa de
+          cómo es el producto por dentro, debajo del temario. Se muestra
+          a su tamaño real (sin recortar) porque suele ser una captura de
+          pantalla, no una foto de producto. */}
+      {product.secondaryImage && (
+        <div className="mt-16 border-t border-[var(--border)] pt-12">
+          <h2 className="font-serif text-2xl">Así es por dentro</h2>
+          <div className="mt-8 overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)]">
+            <Image
+              src={product.secondaryImage}
+              alt={`Vista previa de ${product.name}`}
+              width={1471}
+              height={909}
+              sizes="(min-width: 1024px) 800px, 100vw"
+              className="h-auto w-full"
+            />
           </div>
         </div>
       )}
