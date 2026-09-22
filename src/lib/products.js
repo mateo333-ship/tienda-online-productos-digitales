@@ -15,7 +15,19 @@ const PRODUCTS = [
     name: "GUIA DE REVENTA: Revende como un PRO en Vinted y Wallapop 🚀",
     category: "Formación y Negocios",
     price: 990,
+    // Precio tachado junto al de oferta (mismo campo que usa el producto
+    // de Shopify más abajo): solo cambia lo que se ve en la ficha y en la
+    // tarjeta del catálogo, el precio real que se cobra sigue siendo
+    // `price`.
+    compareAtPrice: 1499,
     image: "/products/guia-reventa-vinted-wallapop.jpg",
+    // Segunda imagen (igual que en la guía de Shopify): vista previa de
+    // cómo es la guía por dentro, mostrada en la propia ficha del
+    // producto en la sección "Así es por dentro". Las dimensiones reales
+    // del archivo (1446x939) se guardan aquí para que <Image> reserve el
+    // hueco correcto y no la deforme ni la recorte.
+    secondaryImage: "/products/guia-reventa-vinted-wallapop-interior.png",
+    secondaryImageSize: { width: 1446, height: 939 },
     // Enlace real donde vive el contenido de la guía (fuera de esta web).
     // En cuanto Stripe confirma el pago, este enlace se manda por email
     // al comprador (ver src/server/payments/stripe.js → deliverPaidOrder
@@ -71,8 +83,9 @@ const PRODUCTS = [
     image: "/products/guia-shopify-2026.jpg",
     // Segunda imagen, mostrada más abajo en la propia ficha del producto
     // como vista previa de cómo es la guía por dentro (opcional, igual
-    // que `image`).
+    // que `image`). Dimensiones reales del archivo: 1471x909.
     secondaryImage: "/products/guia-shopify-2026-interior.png",
+    secondaryImageSize: { width: 1471, height: 909 },
     // Enlace real donde vive el contenido de la guía. Se manda por email
     // en cuanto se confirma el pago (ver deliverPaidOrder en
     // src/server/payments/stripe.js) y solo se resuelve en el servidor

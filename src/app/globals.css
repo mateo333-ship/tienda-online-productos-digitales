@@ -47,6 +47,21 @@ body {
   color: var(--ink);
 }
 
+/* Saltos suaves para los enlaces ancla de la propia web (p. ej. "Mira
+   cómo es por dentro" en la ficha de producto, o "Historia" en el menú):
+   sin esto, el navegador salta de golpe a la sección en vez de
+   desplazarse. Se respeta "reducir movimiento" del sistema operativo,
+   igual que ya se hace con la cinta animada del banner de descuento. */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 ::selection {
   background: var(--accent);
   color: var(--accent-ink);

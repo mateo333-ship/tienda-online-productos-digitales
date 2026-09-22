@@ -24,18 +24,37 @@ export default async function ProductoPage({ params }) {
       <div className="grid gap-12 lg:grid-cols-2">
         {/* Igual que en la tarjeta del catálogo: foto real si existe
             (`image`), degradado de color si no. */}
-        <div className="relative aspect-square overflow-hidden rounded-3xl bg-[var(--surface)]">
-          {product.image ? (
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              priority
-              className="object-cover"
-            />
-          ) : (
-            <div className={`h-full w-full bg-gradient-to-br ${product.accent}`} />
+        <div>
+          <div className="relative aspect-square overflow-hidden rounded-3xl bg-[var(--surface)]">
+            {product.image ? (
+              <Image
+                src={product.image}
+                alt={product.name}
+                fill
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                priority
+                className="object-cover"
+              />
+            ) : (
+              <div className={`h-full w-full bg-gradient-to-br ${product.accent}`} />
+            )}
+          </div>
+          {/* Antes esta llamada a "Así es por dentro" solo existía como
+              título de sección al final de la página, después del
+              temario — fácil de no llegar a ver nunca. Este enlace, justo
+              debajo de la foto principal, se ve sin apenas hacer scroll y
+              lleva directo a esa sección (que además ahora está la
+              primera después de la cabecera, ver más abajo). */}
+          {product.secondaryImage && (
+            <a
+              href="#por-dentro"
+              className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4 text-sm transition hover:border-[var(--accent)]"
+            >
+              <span className="flex items-center gap-2 font-medium">
+                👀 Mira cómo es por dentro
+              </span>
+              <span className="text-[var(--ink-soft)]">↓</span>
+            </a>
           )}
         </div>
 
@@ -96,6 +115,31 @@ export default async function ProductoPage({ params }) {
         </div>
       </div>
 
+      {/* Segunda imagen (`secondaryImage`), opcional: una vista previa de
+          cómo es el producto por dentro. Va la primera sección después de
+          la cabecera (antes incluso del temario) precisamente para que se
+          vea sin tener que bajar mucho — el enlace "Mira cómo es por
+          dentro" de más arriba trae aquí directo. `scroll-mt-24` evita que
+          la cabecera fija de la web (que se queda pegada arriba) tape el
+          principio de la sección al saltar con ese enlace. Se muestra a su
+          tamaño real (sin recortar) porque suele ser una captura de
+          pantalla, no una foto de producto. */}
+      {product.secondaryImage && (
+        <div id="por-dentro" className="mt-16 scroll-mt-24 border-t border-[var(--border)] pt-12">
+          <h2 className="font-serif text-2xl">Así es por dentro</h2>
+          <div className="mt-8 overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)]">
+            <Image
+              src={product.secondaryImage}
+              alt={`Vista previa de ${product.name}`}
+              width={product.secondaryImageSize?.width ?? 1471}
+              height={product.secondaryImageSize?.height ?? 909}
+              sizes="(min-width: 1024px) 800px, 100vw"
+              className="h-auto w-full"
+            />
+          </div>
+        </div>
+      )}
+
       {/* "Qué vas a dominar": solo los productos tipo curso/ebook traen este
           temario (campo `highlights`); el resto de la ficha no cambia si no
           existe, así que esto no rompe los productos de ejemplo. */}
@@ -110,26 +154,6 @@ export default async function ProductoPage({ params }) {
                 <p className="mt-2 text-sm text-[var(--ink-soft)]">{h.text}</p>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Segunda imagen (`secondaryImage`), opcional: una vista previa de
-          cómo es el producto por dentro, debajo del temario. Se muestra
-          a su tamaño real (sin recortar) porque suele ser una captura de
-          pantalla, no una foto de producto. */}
-      {product.secondaryImage && (
-        <div className="mt-16 border-t border-[var(--border)] pt-12">
-          <h2 className="font-serif text-2xl">Así es por dentro</h2>
-          <div className="mt-8 overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)]">
-            <Image
-              src={product.secondaryImage}
-              alt={`Vista previa de ${product.name}`}
-              width={1471}
-              height={909}
-              sizes="(min-width: 1024px) 800px, 100vw"
-              className="h-auto w-full"
-            />
           </div>
         </div>
       )}
