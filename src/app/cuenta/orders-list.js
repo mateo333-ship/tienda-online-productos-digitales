@@ -110,32 +110,44 @@ export function OrdersList({ initialOrders }) {
             <span className="font-medium">{formatPrice(order.total)}</span>
           </div>
 
-          <div className="mt-3 flex justify-end border-t border-[var(--border)] pt-3">
-            {confirmingId === order.id ? (
-              <div className="flex items-center gap-3 text-sm">
-                <span className="text-[var(--ink-soft)]">¿Eliminar este pedido?</span>
+          {/* Un pedido "pagado" es el historial real de una compra (y la
+              prueba de que se entregó el acceso): no se ofrece la opción
+              de eliminarlo, ni siquiera se ve el botón — se queda en la
+              cuenta para siempre. Solo se puede quitar un pedido que
+              todavía no se llegó a pagar (pendiente o fallido), por
+              ejemplo para limpiar un intento de compra que no se
+              completó. El servidor vuelve a comprobar esto de todas
+              formas (ver /api/orders/[id]), así que aunque alguien
+              manipulase el navegador, un pedido pagado no se puede
+              borrar. */}
+          {order.status !== "pagado" && (
+            <div className="mt-3 flex justify-end border-t border-[var(--border)] pt-3">
+              {confirmingId === order.id ? (
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-[var(--ink-soft)]">¿Eliminar este pedido?</span>
+                  <button
+                    onClick={() => handleDelete(order.id)}
+                    className="font-medium text-rose-400 hover:text-rose-300"
+                  >
+                    Sí, eliminar
+                  </button>
+                  <button
+                    onClick={() => setConfirmingId(null)}
+                    className="text-[var(--ink-soft)] hover:text-[var(--ink)]"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
                 <button
-                  onClick={() => handleDelete(order.id)}
-                  className="font-medium text-rose-400 hover:text-rose-300"
+                  onClick={() => setConfirmingId(order.id)}
+                  className="text-sm text-[var(--ink-soft)] underline hover:text-rose-400"
                 >
-                  Sí, eliminar
+                  Eliminar pedido
                 </button>
-                <button
-                  onClick={() => setConfirmingId(null)}
-                  className="text-[var(--ink-soft)] hover:text-[var(--ink)]"
-                >
-                  Cancelar
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setConfirmingId(order.id)}
-                className="text-sm text-[var(--ink-soft)] underline hover:text-rose-400"
-              >
-                Eliminar pedido
-              </button>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       ))}
     </div>

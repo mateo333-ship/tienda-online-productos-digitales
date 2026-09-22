@@ -75,6 +75,89 @@ async function writeToFirebase(fileName, data) {
   }
 }
 
+/**
+ * Igual que `readFromFirebase`, pero además pide a Firebase una "ETag":
+ * una especie de sello que identifica exactamente esa versión de los
+ * datos, para poder comprobar más tarde si alguien más ha escrito por
+ * en medio (ver `updateFirebase` más abajo).
+ */
+async function readFirebaseWithTag(fileName, defaultValue) {
+  const res = await fetch(firebaseUrl(fileName), {
+    cache: "no-store",
+    headers: { "X-Firebase-ETag": "true" },
+  });
+  if (!res.ok) {
+    throw new Error(`No se ha podido leer "${fileName}" de Firebase (HTTP ${res.status}).`);
+  }
+  const etag = res.headers.get("etag");
+  const value = await res.json();
+  return { value: value ?? defaultValue, etag };
+}
+
+/**
+ * Escritura "condicional": Firebase solo la acepta si nadie ha vuelto a
+ * escribir ese mismo dato desde que se leyó la ETag (con `if-match`).
+ * Si alguien se ha adelantado, Firebase responde 412 y devolvemos
+ * `false` en vez de lanzar un error, para que quien llama pueda releer
+ * los datos ya actualizados y reintentar sobre ellos.
+ */
+async function writeFirebaseIfMatch(fileName, data, etag) {
+  const res = await fetch(firebaseUrl(fileName), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", "if-match": etag ?? "*" },
+    body: JSON.stringify(data),
+  });
+  if (res.status === 412) return false;
+  if (!res.ok) {
+    throw new Error(`No se ha podido guardar "${fileName}" en Firebase (HTTP ${res.status}).`);
+  }
+  return true;
+}
+
+/**
+ * ------------------------------------------------------------------
+ *  Por qué existe esto: evitar que una escritura "se pierda"
+ * ------------------------------------------------------------------
+ * `readJsonStore` + modificar en memoria + `writeJsonStore` (leer TODO
+ * el fichero, cambiarlo, y volver a guardarlo TODO) tiene un fallo
+ * clásico en un hosting serverless como Vercel: si dos peticiones llegan
+ * casi a la vez (dos compras distintas creándose a la vez, o alguien
+ * borra un pedido justo cuando llega la confirmación de pago de otro),
+ * cada una puede leer los datos ANTES de que la otra termine de guardar
+ * los suyos — y la segunda en guardar "gana", borrando sin querer el
+ * cambio de la primera. Con ficheros en tu propio ordenador esto casi
+ * nunca pasa porque todo va por el mismo proceso, uno detrás de otro
+ * (y aun así lo protegemos con `withLock` más abajo); pero en Vercel,
+ * dos peticiones a la vez pueden ejecutarse en instancias totalmente
+ * separadas, sin nada en común entre ellas.
+ *
+ * La solución: en vez de "leo, modifico, guardo" a ciegas, se hace
+ * "leo con una ETag, modifico, guardo SOLO SI nadie más ha escrito
+ * desde que leí" (lo que Firebase llama una escritura condicional). Si
+ * alguien se adelantó, se vuelve a leer el dato ya actualizado, se
+ * vuelve a aplicar el cambio sobre ese dato fresco, y se reintenta —
+ * así ninguna escritura desaparece silenciosamente, pase lo que pase
+ * con el orden de llegada.
+ * ------------------------------------------------------------------
+ */
+async function updateFirebase(fileName, defaultValue, updater) {
+  const MAX_ATTEMPTS = 8;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const { value, etag } = await readFirebaseWithTag(fileName, defaultValue);
+    const result = await updater(value);
+    // El `updater` puede devolver `{ next: undefined }` para decir "no
+    // hay nada que cambiar" (por ejemplo, borrar un pedido que no
+    // existe) sin gastar una escritura de más.
+    if (result.next === undefined) return result;
+    const wrote = await writeFirebaseIfMatch(fileName, result.next, etag);
+    if (wrote) return result;
+    // Alguien escribió a la vez (412): se reintenta desde datos frescos.
+  }
+  throw new Error(
+    `No se ha podido actualizar "${fileName}": demasiadas escrituras simultáneas a la vez.`
+  );
+}
+
 // ---------------------------------------------------------------------
 // Modo fichero local (desarrollo)
 // ---------------------------------------------------------------------
@@ -125,6 +208,27 @@ async function writeToFile(fileName, data) {
   });
 }
 
+// En modo fichero local, `withLock` ya serializa todas las lecturas y
+// escrituras de un mismo fichero (una detrás de otra, nunca a la vez),
+// así que aquí "leer, modificar, guardar" dentro del mismo `withLock` ya
+// es seguro por sí solo — no hace falta ETag ni reintentos.
+async function updateFile(fileName, defaultValue, updater) {
+  return withLock(fileName, async () => {
+    const filePath = await ensureFile(fileName, defaultValue);
+    const raw = await readFile(filePath, "utf-8");
+    let value;
+    try {
+      value = JSON.parse(raw);
+    } catch {
+      value = defaultValue;
+    }
+    const result = await updater(value);
+    if (result.next === undefined) return result;
+    await writeFile(filePath, JSON.stringify(result.next, null, 2), "utf-8");
+    return result;
+  });
+}
+
 // ---------------------------------------------------------------------
 // API pública (igual que antes: el resto del proyecto no cambia nada)
 // ---------------------------------------------------------------------
@@ -134,4 +238,19 @@ export async function readJsonStore(fileName, defaultValue) {
 
 export async function writeJsonStore(fileName, data) {
   return useFirebase ? writeToFirebase(fileName, data) : writeToFile(fileName, data);
+}
+
+/**
+ * Lee, modifica y guarda como una única operación seguro frente a
+ * escrituras simultáneas (ver la explicación larga más arriba, junto a
+ * `updateFirebase`). `updater(value)` recibe los datos actuales y debe
+ * devolver `{ next, ...resto }`: `next` son los datos ya modificados que
+ * se van a guardar (o `undefined` si no hay nada que guardar), y
+ * `...resto` es cualquier otro dato que quien llama quiera recuperar
+ * (por ejemplo, si el pedido que se quería borrar existía o no).
+ */
+export async function updateJsonStore(fileName, defaultValue, updater) {
+  return useFirebase
+    ? updateFirebase(fileName, defaultValue, updater)
+    : updateFile(fileName, defaultValue, updater);
 }

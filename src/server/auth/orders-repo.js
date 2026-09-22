@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { readJsonStore, writeJsonStore } from "../data/store.js";
+import { readJsonStore, updateJsonStore } from "../data/store.js";
 
 // Mismo patrón que users-repo.js: hoy es un JSON, mañana puede ser SQL,
 // y el resto de la app no se entera del cambio.
@@ -14,8 +14,16 @@ export async function listOrdersForUser(userId) {
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
+/**
+ * Las tres funciones que cambian algo (crear, cambiar estado, borrar)
+ * usan `updateJsonStore` en vez de "leo y luego guardo" por separado:
+ * así, si dos peticiones llegan casi a la vez (dos compras a la vez, o
+ * un borrado justo cuando llega la confirmación de otro pago), ninguna
+ * de las dos pisa a la otra sin darse cuenta — ver la explicación larga
+ * en src/server/data/store.js, junto a `updateFirebase`.
+ */
+
 export async function createOrderForUser(userId, { items, total, status = "pendiente", buyerInfo = null }) {
-  const orders = await readJsonStore(ORDERS_FILE, []);
   const order = {
     id: randomUUID(),
     userId,
@@ -29,8 +37,11 @@ export async function createOrderForUser(userId, { items, total, status = "pendi
     buyerInfo,
     createdAt: Date.now(),
   };
-  orders.push(order);
-  await writeJsonStore(ORDERS_FILE, orders);
+
+  await updateJsonStore(ORDERS_FILE, [], (orders) => ({
+    next: [...orders, order],
+  }));
+
   return order;
 }
 
@@ -51,27 +62,39 @@ export async function findOrderById(orderId) {
  * en src/server/payments/stripe.js).
  */
 export async function setOrderStatus(orderId, status, extra = {}) {
-  const orders = await readJsonStore(ORDERS_FILE, []);
-  const order = orders.find((o) => o.id === orderId);
-  if (!order) return null;
-  order.status = status;
-  Object.assign(order, extra);
-  await writeJsonStore(ORDERS_FILE, orders);
-  return order;
+  const { updatedOrder } = await updateJsonStore(ORDERS_FILE, [], (orders) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return { next: undefined, updatedOrder: null };
+    Object.assign(order, { status }, extra);
+    return { next: orders, updatedOrder: order };
+  });
+  return updatedOrder;
 }
 
 /**
- * Elimina un pedido, pero SOLO si pertenece al usuario que lo pide: se
- * comprueba `o.userId === userId` antes de borrar, así que nadie puede
- * borrar (ni siquiera adivinando el id) un pedido de otra cuenta.
- * Devuelve `true` si había un pedido suyo con ese id y se ha borrado.
+ * Elimina un pedido, pero con dos comprobaciones, ambas en el servidor y
+ * ninguna basada en lo que diga el navegador:
+ *
+ *  1. Solo si pertenece al usuario que lo pide (`o.userId === userId`),
+ *     así que nadie puede borrar —ni siquiera adivinando el id— un pedido
+ *     de otra cuenta.
+ *  2. Solo si NO está ya pagado: un pedido "pagado" es el historial real
+ *     de una compra (y la prueba de que se entregó el acceso), así que
+ *     una vez pagado se queda para siempre en la cuenta, no se puede
+ *     eliminar ni por error ni a propósito.
+ *
+ * Devuelve un motivo (`"ok"`, `"not_found"` o `"paid"`) en vez de solo
+ * true/false, para que la API pueda explicar claramente por qué no se ha
+ * borrado cuando corresponda.
  */
 export async function deleteOrderForUser(userId, orderId) {
-  const orders = await readJsonStore(ORDERS_FILE, []);
-  const existed = orders.some((o) => o.id === orderId && o.userId === userId);
-  if (!existed) return false;
+  const { outcome } = await updateJsonStore(ORDERS_FILE, [], (orders) => {
+    const order = orders.find((o) => o.id === orderId && o.userId === userId);
+    if (!order) return { next: undefined, outcome: "not_found" };
+    if (order.status === "pagado") return { next: undefined, outcome: "paid" };
 
-  const remaining = orders.filter((o) => !(o.id === orderId && o.userId === userId));
-  await writeJsonStore(ORDERS_FILE, remaining);
-  return true;
+    const remaining = orders.filter((o) => !(o.id === orderId && o.userId === userId));
+    return { next: remaining, outcome: "ok" };
+  });
+  return outcome;
 }
