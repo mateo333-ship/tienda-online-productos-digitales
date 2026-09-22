@@ -32,9 +32,12 @@ export default async function CuentaPage({ searchParams }) {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <div className="flex items-start justify-between">
+      {/* En móvil, un nombre largo puede partir "Hola, ..." en dos líneas;
+          apilamos el botón de cerrar sesión debajo en vez de mantenerlo
+          pegado arriba a la derecha, para que nunca quede descuadrado. */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="font-serif text-4xl">Hola, {user.name}</h1>
+          <h1 className="font-serif text-3xl sm:text-4xl">Hola, {user.name}</h1>
           <p className="mt-1 text-sm text-[var(--ink-soft)]">{user.email}</p>
         </div>
         <LogoutButton />

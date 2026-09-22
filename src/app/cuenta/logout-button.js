@@ -19,7 +19,7 @@ export function LogoutButton() {
           router.refresh();
         })
       }
-      className="text-sm font-medium text-[var(--ink-soft)] underline hover:text-[var(--ink)]"
+      className="self-start text-sm font-medium text-[var(--ink-soft)] underline hover:text-[var(--ink)]"
     >
       Cerrar sesión
     </button>

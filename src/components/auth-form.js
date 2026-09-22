@@ -114,15 +114,6 @@ export function AuthForm({ mode = "login", next }) {
           />
         </div>
 
-        {!isRegister && (
-          <div className="forgot">
-            <label>
-              <input type="checkbox" className="mr-1 align-middle" /> Recuérdame
-            </label>
-            <a href="#">¿Olvidaste tu contraseña?</a>
-          </div>
-        )}
-
         {error && (
           <p className="mt-3 text-sm text-rose-400" role="alert">
             {error}
