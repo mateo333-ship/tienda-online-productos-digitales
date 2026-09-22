@@ -59,6 +59,13 @@ export default async function ProductoPage({ params }) {
           <div className="mt-8">
             <AddToCartButton product={product} />
           </div>
+          {/* Recordatorio del código justo en el momento de decidir la
+              compra, en el mismo estilo compacto que en el catálogo y el
+              carrito — no otro banner grande, solo esta línea. */}
+          <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1.5 text-xs font-medium">
+            ✨ Código <strong className="font-semibold">DIGITAL10</strong> — 10% de descuento en tu
+            primer pedido
+          </p>
           <p className="mt-3 text-xs text-[var(--ink-soft)]">
             📩 Acceso inmediato: al ser un producto 100% digital, lo recibes al instante tras la
             compra.

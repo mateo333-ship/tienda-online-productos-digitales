@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { getFeaturedProducts } from "@/lib/products";
+import { getCurrentUser } from "@/server/auth/current-user";
 
 const STEPS = [
   {
@@ -36,8 +37,14 @@ const TESTIMONIALS = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
   const featured = getFeaturedProducts(3);
+  // Se comprueba en el propio servidor (con la cookie de sesión, nunca
+  // con algo que decida el navegador) para que el CTA de "Crea tu
+  // cuenta" ni siquiera llegue a aparecer un instante si ya has
+  // iniciado sesión — no tendría sentido pedirte crear una cuenta que
+  // ya tienes.
+  const user = await getCurrentUser();
 
   return (
     <div>
@@ -110,18 +117,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA final */}
-      <section className="mx-auto max-w-6xl px-6 pb-24">
-        <div className="flex flex-col items-start gap-6 rounded-3xl bg-[var(--ink)] px-8 py-14 text-[var(--background)] sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="font-serif text-3xl">Crea tu cuenta y guarda tus pedidos</h2>
-            <p className="mt-2 max-w-md text-sm text-[var(--background)]/70">
-              Registro con código de verificación por email y sesión protegida.
-            </p>
+      {/* CTA final: solo tiene sentido para quien todavía no tiene
+          cuenta — si ya has iniciado sesión, no se muestra. */}
+      {!user && (
+        <section className="mx-auto max-w-6xl px-6 pb-24">
+          <div className="flex flex-col items-start gap-6 rounded-3xl bg-[var(--ink)] px-8 py-14 text-[var(--background)] sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-serif text-3xl">Crea tu cuenta y guarda tus pedidos</h2>
+              <p className="mt-2 max-w-md text-sm text-[var(--background)]/70">
+                Registro con código de verificación por email y sesión protegida.
+              </p>
+            </div>
+            <Button href="/login">Crear cuenta</Button>
           </div>
-          <Button href="/login">Crear cuenta</Button>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }
