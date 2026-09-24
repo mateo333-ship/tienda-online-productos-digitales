@@ -126,6 +126,60 @@ const PRODUCTS = [
     accent: "from-sky-500/30 to-indigo-700/25",
   },
   {
+    slug: "producto-ganador-ecommerce-2026",
+    name: "Guía Interactiva: Cómo Encontrar tu Producto Ganador en E-commerce (Edición 2026)",
+    category: "Formación y Negocios",
+    price: 699,
+    // Precio tachado junto al de oferta (mismo campo que en las otras dos
+    // guías): solo cambia lo que se ve, el precio real que se cobra sigue
+    // siendo `price`.
+    compareAtPrice: 1999,
+    image: "/products/producto-ganador-ecommerce-2026.jpg",
+    // Segunda imagen: captura de la calculadora de rentabilidad, una de
+    // las 4 herramientas interactivas de la guía. Dimensiones reales del
+    // archivo: 2400x1792.
+    secondaryImage: "/products/producto-ganador-ecommerce-2026-interior.jpg",
+    secondaryImageSize: { width: 2400, height: 1792 },
+    // Enlace real donde vive el contenido de la guía. Se manda por email
+    // en cuanto se confirma el pago (ver deliverPaidOrder en
+    // src/server/payments/stripe.js) y solo se resuelve en el servidor
+    // (ver cuenta/page.js) — nunca llega al navegador de nadie que no
+    // haya pagado ese pedido en concreto.
+    accessUrl: "https://productoganador2308vsdnvkj32.vercel.app/",
+
+    description:
+      "¿Sabías que la elección del artículo que vendes define hasta el 80% del éxito de tu tienda online? \"Producto Ganador\" no es un PDF teórico más: es una guía digital interactiva que sustituye las corazonadas y los vídeos virales por un sistema medible y comprobado para encontrar, validar y vender productos rentables en tu tienda de dropshipping o e-commerce.",
+    highlights: [
+      {
+        emoji: "🎯",
+        title: "El Método de los 10 Filtros",
+        text: "Evalúa y puntúa cualquier producto del 0 al 30 para saber si tiene potencial antes de invertir un solo euro en publicidad.",
+      },
+      {
+        emoji: "🧮",
+        title: "4 Herramientas Interactivas",
+        text: "Puntuador de productos, calculadora de rentabilidad al céntimo (con aranceles e IVA), checklist de validación y glosario técnico.",
+      },
+      {
+        emoji: "📊",
+        title: "Análisis de 7 Nichos Rentables",
+        text: "Mascotas, Hogar, Tech, Belleza y más, con 42 ejemplos de productos tipo y sus costes y precios de venta estimados.",
+      },
+      {
+        emoji: "🗺️",
+        title: "Plan de Acción en 20 Capítulos",
+        text: "5 fases — Fundamentos, Búsqueda, Nichos, Proveedores y Validación — desde negociar con agentes hasta un test de mercado en 7 días.",
+      },
+    ],
+    details: [
+      "Formato: guía digital interactiva (web app) — no es un PDF estático",
+      "Acceso inmediato e indefinido, desde cualquier dispositivo",
+      "Incluye puntuador, calculadora de rentabilidad, checklist y glosario",
+      "Licencia de uso personal, intransferible",
+    ],
+    accent: "from-cyan-500/30 to-blue-700/25",
+  },
+  {
     slug: "bruma-de-cedro",
     name: "Bruma de Cedro",
     category: "Aromas",
