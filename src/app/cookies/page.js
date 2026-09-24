@@ -27,8 +27,10 @@ export default function CookiesPage() {
 
       <LegalSection heading="2. Cookies que usamos actualmente">
         <p>
-          Ahora mismo esta web solo instala cookies estrictamente necesarias. No usamos cookies de
-          analítica ni de marketing.
+          Esta web instala siempre las cookies estrictamente necesarias. Además, si aceptas la
+          categoría &ldquo;Analíticas&rdquo; en el panel de preferencias, se instalan también las
+          cookies de Google Analytics que aparecen en la tabla; si no la aceptas, esas cookies no
+          llegan a instalarse.
         </p>
         <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
           <table className="w-full text-left text-xs">
@@ -50,6 +52,24 @@ export default function CookiesPage() {
                 </td>
                 <td className="px-4 py-3">7 días</td>
               </tr>
+              <tr className="border-t border-[var(--border)]">
+                <td className="px-4 py-3 font-mono">_ga</td>
+                <td className="px-4 py-3">Analítica, Google</td>
+                <td className="px-4 py-3">
+                  Distingue a los distintos visitantes de la web (Google Analytics). Solo se
+                  instala si aceptas la categoría &ldquo;Analíticas&rdquo;.
+                </td>
+                <td className="px-4 py-3">2 años</td>
+              </tr>
+              <tr className="border-t border-[var(--border)]">
+                <td className="px-4 py-3 font-mono">_ga_&lt;id&gt;</td>
+                <td className="px-4 py-3">Analítica, Google</td>
+                <td className="px-4 py-3">
+                  Mantiene el estado de tu sesión de navegación para Google Analytics. Solo se
+                  instala si aceptas la categoría &ldquo;Analíticas&rdquo;.
+                </td>
+                <td className="px-4 py-3">2 años</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -57,6 +77,11 @@ export default function CookiesPage() {
           Además, tu elección de cookies se guarda en el almacenamiento local de tu navegador
           (localStorage), no como una cookie tradicional, para recordar tu decisión en tus
           próximas visitas.
+        </p>
+        <p>
+          También usamos Vercel Analytics, una herramienta de estadísticas de visitas que, según
+          la propia política de privacidad de Vercel, no instala ninguna cookie ni guarda datos
+          que identifiquen a una persona concreta.
         </p>
       </LegalSection>
 
@@ -68,14 +93,14 @@ export default function CookiesPage() {
             consentimiento y no se pueden desactivar.
           </li>
           <li>
-            <strong className="text-[var(--ink)]">Analíticas</strong> — nos ayudarían a entender
-            cómo se usa la web para mejorarla (por ejemplo, qué páginas se visitan más). No están
-            activas todavía; hemos preparado esta categoría para el día en que se incorpore una
-            herramienta de analítica, y solo se activaría con tu consentimiento.
+            <strong className="text-[var(--ink)]">Analíticas</strong> — nos ayudan a entender cómo
+            se usa la web para mejorarla (por ejemplo, qué páginas se visitan más), mediante Google
+            Analytics y Vercel Analytics. Solo se activan si das tu consentimiento, y puedes
+            retirarlo cuando quieras desde el panel de preferencias.
           </li>
           <li>
             <strong className="text-[var(--ink)]">Marketing</strong> — se usarían para mostrar
-            promociones relevantes dentro o fuera de esta web. Tampoco están activas todavía; se
+            promociones relevantes dentro o fuera de esta web. No están activas todavía; se
             activarían únicamente con tu consentimiento si en el futuro se incorporan.
           </li>
         </ul>
