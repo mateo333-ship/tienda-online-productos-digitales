@@ -34,7 +34,13 @@ export function CookieSettingsButton() {
       onClick={openPanel}
       aria-label="Preferencias de cookies"
       title="Preferencias de cookies"
-      className="fixed bottom-5 left-5 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--ink-soft)] shadow-lg shadow-black/40 transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+      // En la esquina inferior DERECHA, no izquierda: casi todo el texto de
+      // la web (títulos, párrafos) empieza pegado al borde izquierdo, así
+      // que un botón fijo ahí acababa tapando la última línea de titulares
+      // largos al hacer scroll en móvil (comprobado en "Lo más querido" y
+      // en el propio título de cada producto). La derecha rara vez tiene
+      // texto pegado al borde.
+      className="fixed bottom-5 right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--ink-soft)] shadow-lg shadow-black/40 transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
     >
       <CookieIcon className="h-6 w-6" />
     </button>
