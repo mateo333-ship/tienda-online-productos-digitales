@@ -36,7 +36,6 @@ export default function PrivacidadPage() {
             Datos de pago: los introduces directamente en la página segura de Stripe; nosotros no
             llegamos a ver ni a guardar el número de tu tarjeta.
           </li>
-          <li>Mensajes que nos envías desde el formulario de contacto (nombre, email y el mensaje en sí).</li>
           <li>Datos técnicos básicos (por ejemplo, dirección IP) usados para seguridad y para limitar abusos, como los intentos de inicio de sesión.</li>
           <li>
             Cookies y tecnologías similares — ver el detalle completo en nuestra{" "}
@@ -52,7 +51,6 @@ export default function PrivacidadPage() {
         <ul className="list-disc space-y-1 pl-5">
           <li>Crear y gestionar tu cuenta, y mantener tu sesión iniciada.</li>
           <li>Procesar tus pedidos y pagos, y entregarte el producto digital comprado por email.</li>
-          <li>Responder a los mensajes que nos envías desde el formulario de contacto.</li>
           <li>Prevenir fraude y proteger la seguridad de la tienda (por ejemplo, limitar intentos de inicio de sesión).</li>
           <li>Cumplir con nuestras obligaciones legales y fiscales.</li>
         </ul>
@@ -62,7 +60,7 @@ export default function PrivacidadPage() {
       <LegalSection heading="4. Base legal">
         <ul className="list-disc space-y-1 pl-5">
           <li>Ejecución de un contrato: gestionar tu cuenta, tus pedidos y la entrega de lo que compras.</li>
-          <li>Consentimiento: para las cookies no esenciales (analíticas o de marketing) y para el formulario de contacto.</li>
+          <li>Consentimiento: para las cookies no esenciales (analíticas o de marketing).</li>
           <li>Interés legítimo: prevención de fraude y seguridad de la tienda.</li>
           <li>Obligación legal: conservación de facturas y registros contables cuando corresponda.</li>
         </ul>

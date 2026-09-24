@@ -5,8 +5,8 @@ import { createContext, useCallback, useContext, useState } from "react";
 /**
  * Overlay de carga a pantalla completa, para acciones "importantes" que
  * hablan con el servidor (iniciar/cerrar sesión, crear cuenta, verificar
- * el código, confirmar un pedido, enviar el formulario de contacto, y la
- * comprobación de sesión que se hace al cargar la página). No se usa para
+ * el código, confirmar un pedido, y la comprobación de sesión que se hace
+ * al cargar la página). No se usa para
  * navegar entre páginas con enlaces normales — eso ya es instantáneo por
  * sí solo y no necesita overlay.
  *
