@@ -55,6 +55,15 @@ export const metadata = {
     description:
       "Tienda online de cursos y ebooks digitales: compra y descarga al momento, sin envíos ni esperas.",
   },
+  // Demuestra a Google Search Console que esta web es tuya (Next añade
+  // solo la etiqueta <meta name="google-site-verification" ...> en el
+  // <head>). El código sale de Search Console → Añadir propiedad →
+  // Prefijo de URL → método "Etiqueta HTML" — si algún día necesitas
+  // verificarla de nuevo (por ejemplo, con otra cuenta de Google), el
+  // nuevo código va aquí.
+  verification: {
+    google: "Fs7d49yyRuliIxwQp-Lp20AwKQ9i2WE2htnuDN6B9Uw",
+  },
 };
 
 export default function RootLayout({ children }) {
