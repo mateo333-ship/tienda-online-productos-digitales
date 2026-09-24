@@ -1,6 +1,9 @@
 import { ContactForm } from "@/components/contact-form";
 
-export const metadata = { title: "Contacto — The God Supplier" };
+export const metadata = {
+  title: "Contacto",
+  description: "¿Dudas sobre un curso o un pedido? Escríbenos y te respondemos.",
+};
 
 export default function ContactoPage() {
   return (

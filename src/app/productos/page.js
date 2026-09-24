@@ -1,7 +1,10 @@
 import { getAllProducts } from "@/lib/products";
 import { ProductCard } from "@/components/product-card";
 
-export const metadata = { title: "Catálogo — The God Supplier" };
+export const metadata = {
+  title: "Catálogo",
+  description: "Todos los cursos y ebooks digitales de The God Supplier, en un único catálogo.",
+};
 
 export default function CatalogoPage() {
   const products = getAllProducts();

@@ -9,6 +9,8 @@ import { CookieConsentProvider } from "@/components/cookie-consent-provider";
 import { CookieBanner } from "@/components/cookie-banner";
 import { CookieSettingsButton } from "@/components/cookie-settings-button";
 import { CookiePreferencesModal } from "@/components/cookie-preferences-modal";
+import { ConsentedAnalytics } from "@/components/consented-analytics";
+import { SITE_URL } from "@/lib/site";
 
 // Nota: usamos la pila de fuentes del sistema (definida en globals.css)
 // en lugar de next/font/google para que el proyecto compile sin depender
@@ -19,9 +21,40 @@ import { CookiePreferencesModal } from "@/components/cookie-preferences-modal";
 // línea en globals.css (--font-sans / --font-serif).
 
 export const metadata = {
-  title: "The God Supplier — Cursos y ebooks digitales al instante",
+  // Todas las URLs "relativas" que genera Next (Open Graph, canonical,
+  // el propio sitemap) se resuelven a partir de aquí — así, en cuanto
+  // pongas NEXT_PUBLIC_SITE_URL con tu dominio propio (ver lib/site.js),
+  // TODO lo que use metadata pasa a apuntar a ese dominio sin tocar nada
+  // más en este archivo.
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "The God Supplier — Cursos y ebooks digitales al instante",
+    // Las páginas que ponen su propio título (ver cada `export const
+    // metadata` de src/app/**) lo insertan aquí en vez de repetir
+    // "— The God Supplier" en cada una.
+    template: "%s — The God Supplier",
+  },
   description:
     "Tienda online de cursos y ebooks digitales: compra y descarga al momento, sin envíos ni esperas.",
+  // Open Graph y Twitter Card: lo que se ve al compartir el enlace de la
+  // tienda en WhatsApp, redes sociales, etc. La imagen sale sola de
+  // opengraph-image.js (Next la detecta por el nombre del archivo), así
+  // que no hace falta repetirla aquí.
+  openGraph: {
+    title: "The God Supplier — Cursos y ebooks digitales al instante",
+    description:
+      "Tienda online de cursos y ebooks digitales: compra y descarga al momento, sin envíos ni esperas.",
+    url: SITE_URL,
+    siteName: "The God Supplier",
+    locale: "es_ES",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The God Supplier — Cursos y ebooks digitales al instante",
+    description:
+      "Tienda online de cursos y ebooks digitales: compra y descarga al momento, sin envíos ni esperas.",
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -46,6 +79,7 @@ export default function RootLayout({ children }) {
           <CookieBanner />
           <CookieSettingsButton />
           <CookiePreferencesModal />
+          <ConsentedAnalytics />
         </CookieConsentProvider>
       </body>
     </html>

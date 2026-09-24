@@ -2,7 +2,10 @@ import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal-page";
 import { LEGAL_INFO } from "@/lib/legal-info";
 
-export const metadata = { title: "Términos y condiciones — The God Supplier" };
+export const metadata = {
+  title: "Términos y condiciones",
+  description: "Condiciones de uso y de compra en The God Supplier.",
+};
 
 const UPDATED = "22 de septiembre de 2026";
 

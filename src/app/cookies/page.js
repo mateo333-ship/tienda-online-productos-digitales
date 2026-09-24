@@ -2,7 +2,10 @@ import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal-page";
 import { LEGAL_INFO } from "@/lib/legal-info";
 
-export const metadata = { title: "Política de cookies — The God Supplier" };
+export const metadata = {
+  title: "Política de cookies",
+  description: "Qué cookies usamos en The God Supplier y cómo puedes gestionarlas.",
+};
 
 const UPDATED = "22 de septiembre de 2026";
 

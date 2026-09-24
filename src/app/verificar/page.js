@@ -1,7 +1,11 @@
 import { Suspense } from "react";
 import { VerificarForm } from "./verificar-form";
 
-export const metadata = { title: "Verifica tu email — The God Supplier" };
+export const metadata = {
+  title: "Verifica tu email",
+  description: "Introduce el código que te hemos enviado para verificar tu cuenta.",
+  robots: { index: false, follow: false },
+};
 
 export default function VerificarPage() {
   return (

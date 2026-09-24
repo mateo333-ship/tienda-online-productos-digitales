@@ -6,7 +6,10 @@ import { getProductBySlug } from "@/lib/products";
 import { LogoutButton } from "./logout-button";
 import { OrdersList } from "./orders-list";
 
-export const metadata = { title: "Mi cuenta — The God Supplier" };
+export const metadata = {
+  title: "Mi cuenta",
+  robots: { index: false, follow: false },
+};
 
 export default async function CuentaPage({ searchParams }) {
   // Comprobación de sesión en el servidor: si no hay sesión válida, ni

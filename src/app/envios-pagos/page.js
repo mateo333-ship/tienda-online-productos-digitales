@@ -2,7 +2,10 @@ import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal-page";
 import { LEGAL_INFO } from "@/lib/legal-info";
 
-export const metadata = { title: "Entrega y pagos — The God Supplier" };
+export const metadata = {
+  title: "Entrega y pagos",
+  description: "Cómo se entregan tus compras y qué métodos de pago aceptamos en The God Supplier.",
+};
 
 const UPDATED = "22 de septiembre de 2026";
 

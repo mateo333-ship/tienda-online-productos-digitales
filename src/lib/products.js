@@ -179,56 +179,6 @@ const PRODUCTS = [
     ],
     accent: "from-cyan-500/30 to-blue-700/25",
   },
-  {
-    slug: "bruma-de-cedro",
-    name: "Bruma de Cedro",
-    category: "Aromas",
-    price: 1900,
-    description:
-      "Bruma textil e ambiental con base de cedro y toques de bergamota. Perfecta para renovar cualquier estancia.",
-    details: ["100 ml", "Sin alcohol agresivo", "Apta para textiles", "Aroma de larga duración"],
-    accent: "from-stone-500/25 to-emerald-700/25",
-  },
-  {
-    slug: "taza-terracota",
-    name: "Taza Terracota",
-    category: "Cerámica",
-    price: 1600,
-    description:
-      "Taza de cerámica esmaltada a mano, tono terracota mate. Cada pieza es única, con pequeñas variaciones de artesanía.",
-    details: ["350 ml", "Apta para microondas", "Esmaltada a mano", "Pieza única"],
-    accent: "from-orange-500/30 to-rose-700/25",
-  },
-  {
-    slug: "difusor-de-lino",
-    name: "Difusor de Lino",
-    category: "Aromas",
-    price: 2900,
-    description:
-      "Difusor de varillas con esencia de flor de lino y almizcle blanco. Aroma suave y constante durante meses.",
-    details: ["200 ml", "6 varillas de ratán", "Hasta 4 meses de uso", "Sin llama"],
-    accent: "from-slate-500/25 to-stone-600/25",
-  },
-  {
-    slug: "manta-lana-cruda",
-    name: "Manta de Lana Cruda",
-    category: "Textil",
-    price: 5900,
-    description:
-      "Manta tejida en lana cruda sin teñir, 130x180cm. Cálida, transpirable y de tacto natural.",
-    details: ["130 x 180 cm", "Lana 100% sin teñir", "Tejido tradicional", "Cuidado en seco"],
-    accent: "from-neutral-500/25 to-amber-700/20",
-  },
-  {
-    slug: "jabon-avena-miel",
-    name: "Jabón Avena y Miel",
-    category: "Cuidado",
-    price: 900,
-    description:
-      "Jabón artesanal exfoliante con avena y miel cruda. Ideal para pieles sensibles.",
-    details: ["120 g", "Saponificación en frío", "Sin sulfatos", "Vegano excepto la miel"],
-    accent: "from-yellow-500/25 to-amber-700/25",
-  },
 ];
 
 export function getAllProducts() {

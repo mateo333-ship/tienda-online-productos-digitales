@@ -2,7 +2,10 @@ import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal-page";
 import { LEGAL_INFO } from "@/lib/legal-info";
 
-export const metadata = { title: "Política de privacidad — The God Supplier" };
+export const metadata = {
+  title: "Política de privacidad",
+  description: "Cómo tratamos tus datos personales en The God Supplier.",
+};
 
 const UPDATED = "22 de septiembre de 2026";
 

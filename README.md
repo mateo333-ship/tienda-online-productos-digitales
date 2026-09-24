@@ -309,6 +309,29 @@ en `custom_fields`, dentro de `src/app/api/checkout/route.js`, y se leen
 igual que el nombre en `extractBuyerInfoFromSession` (`src/server/
 payments/stripe.js`).
 
+### 6. Indexación en Google, dominio propio y analíticas
+
+**Dominio propio.** Ahora mismo la tienda vive en `tienda-online-productos-digitales.vercel.app`. En cuanto compres un dominio propio y lo conectes en Vercel (Project Settings → Domains):
+
+1. Añade la variable de entorno `NEXT_PUBLIC_SITE_URL` en Vercel (Project Settings → Environment Variables) con tu dominio, por ejemplo `https://tutienda.com` — es el único cambio de código que hace falta, porque el sitemap, el `robots.txt` y las etiquetas Open Graph (ver `src/lib/site.js`) lo leen de ahí en vez de tenerlo escrito a mano en varios sitios.
+2. De paso, verifica ese dominio en Brevo o Resend (ver el punto 3 más arriba, sección "Si los emails llegan pero caen en spam o en Promociones") — con dominio propio SÍ puedes configurar SPF/DKIM, que es lo que de verdad mejora que tus emails no caigan en spam.
+
+**Indexación en Google (Search Console).** Aunque Google acaba encontrando cualquier web pública por su cuenta, darle el sitemap a mano es mucho más rápido:
+
+1. Entra en [Google Search Console](https://search.google.com/search-console) con tu cuenta de Google y añade tu propiedad (la URL de tu tienda, la de Vercel o tu dominio propio).
+2. Verifica que la web es tuya — la forma más simple con Vercel es añadir el registro TXT que te da Search Console en la configuración DNS de tu dominio (o, si sigues en `vercel.app`, con el método HTML que te ofrezca Search Console).
+3. Una vez verificado, ve a "Sitemaps" y añade `sitemap.xml` (queda servido solo, en `tudominio.com/sitemap.xml` — lo genera `src/app/sitemap.js`). Repite lo mismo en [Bing Webmaster Tools](https://www.bing.com/webmasters) si quieres aparecer también en Bing.
+4. Las páginas privadas o transaccionales (`/cuenta`, `/login`, `/verificar`, `/carrito`) están excluidas a propósito, tanto del sitemap como del `robots.txt` (`src/app/robots.js`) — no aportan nada a quien llega desde un buscador.
+
+**La imagen que se ve al compartir el enlace** (WhatsApp, redes sociales) se genera sola a partir de `src/app/opengraph-image.js`, con los mismos colores de la marca — no hace falta subir ningún diseño a mano. Cada producto además comparte con su propia foto en vez de la genérica (ver `generateMetadata` en `src/app/productos/[slug]/page.js`).
+
+**Analíticas (Vercel Analytics).** Ya está integrado (`@vercel/analytics`) y respeta el consentimiento de cookies: no carga NADA hasta que la persona acepta la categoría "analíticas" en el banner (ver `src/components/consented-analytics.js`). Para verlo funcionando:
+
+1. En el dashboard de tu proyecto en Vercel, pestaña **Analytics** — actívalo si es la primera vez (tiene un nivel gratuito).
+2. Las visitas solo empiezan a contarse para quien acepte cookies de analíticas, así que en desarrollo o justo tras publicar verás pocos o ningún dato hasta que la gente interactúe con el banner.
+
+Si en el futuro prefieres cambiar a Google Analytics (más detallado, pero con más cookies de terceros), el sitio ya te da el enganche listo: en vez de montar `<Analytics />` en `src/components/consented-analytics.js`, se monta el script de GA4 ahí mismo, dentro del mismo `if (preferences.analytics)` — el resto de la web no cambia.
+
 ## Qué hay construido y qué es todavía una maqueta
 
 Para que puedas probar la tienda entera hoy mismo, sin depender de nada

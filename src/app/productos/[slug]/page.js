@@ -11,7 +11,18 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const product = getProductBySlug(slug);
-  return { title: product ? `${product.name} — The God Supplier` : "Producto no encontrado" };
+  if (!product) return { title: "Producto no encontrado" };
+
+  return {
+    title: product.name,
+    description: product.description,
+    // Sin esto, compartir el enlace de un producto concreto (WhatsApp,
+    // redes) enseñaría la imagen genérica de la home en vez de la del
+    // propio producto — mucho menos útil para quien lo recibe.
+    openGraph: product.image
+      ? { title: product.name, description: product.description, images: [product.image] }
+      : { title: product.name, description: product.description },
+  };
 }
 
 export default async function ProductoPage({ params }) {

@@ -1,6 +1,10 @@
 import { AuthForm } from "@/components/auth-form";
 
-export const metadata = { title: "Iniciar sesión — The God Supplier" };
+export const metadata = {
+  title: "Iniciar sesión",
+  description: "Inicia sesión o crea tu cuenta en The God Supplier.",
+  robots: { index: false, follow: false },
+};
 
 export default async function LoginPage({ searchParams }) {
   const { next } = await searchParams;
