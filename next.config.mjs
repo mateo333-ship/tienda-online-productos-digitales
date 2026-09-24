@@ -1,3 +1,10 @@
+// Si hay ID de Google Analytics configurado (NEXT_PUBLIC_GA_ID), la CSP de
+// abajo abre hueco justo a los dominios de Google que hacen falta para que
+// cargue (script-src) y para que pueda enviar las visitas (connect-src).
+// Sin esa variable, no se abre ningún hueco de más: la política se queda
+// tan cerrada como estaba antes de tener analítica.
+const gaEnabled = Boolean(process.env.NEXT_PUBLIC_GA_ID);
+
 // Cabeceras de seguridad para todas las respuestas.
 // Ninguna de estas protege datos que ya estuvieran expuestos: son capas
 // adicionales que reducen ataques típicos del navegador (clickjacking,
@@ -21,19 +28,23 @@ const securityHeaders = [
   // que esta web no usa, por si algún script de terceros se colara.
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
   // Content-Security-Policy: por defecto solo se puede cargar de nuestro
-  // propio origen. La web no carga scripts externos ni imágenes remotas ni
-  // usa Stripe.js en el navegador (el pago se hace en la propia página de
-  // Stripe, a la que simplemente se redirige), así que no hace falta abrir
-  // hueco a ningún otro dominio.
+  // propio origen. La web no usa Stripe.js en el navegador (el pago se hace
+  // en la propia página de Stripe, a la que simplemente se redirige), así
+  // que no hace falta abrir hueco a ningún otro dominio salvo, cuando la
+  // analítica de Google está activa, los dominios de Google que necesita.
   {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      `script-src 'self' 'unsafe-inline'${gaEnabled ? " https://www.googletagmanager.com" : ""}`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data:",
+      `img-src 'self' data:${gaEnabled ? " https://www.google-analytics.com" : ""}`,
       "font-src 'self' data:",
-      "connect-src 'self'",
+      `connect-src 'self'${
+        gaEnabled
+          ? " https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com"
+          : ""
+      }`,
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
