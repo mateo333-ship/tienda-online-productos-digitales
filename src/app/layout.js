@@ -55,6 +55,11 @@ export const metadata = {
     description:
       "Tienda online de cursos y ebooks digitales: compra y descarga al momento, sin envíos ni esperas.",
   },
+  // URL "oficial" de la home, para que Google no la confunda con las
+  // URLs de vista previa que genera Vercel en cada despliegue (o con
+  // vercel.app y un futuro dominio propio a la vez). Cada página con su
+  // propio `metadata` puede pisar esto con su propio `alternates.canonical`.
+  alternates: { canonical: "/" },
   // Demuestra a Google Search Console que esta web es tuya (Next añade
   // solo la etiqueta <meta name="google-site-verification" ...> en el
   // <head>). El código sale de Search Console → Añadir propiedad →

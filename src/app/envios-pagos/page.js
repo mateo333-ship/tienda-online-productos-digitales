@@ -5,6 +5,7 @@ import { LEGAL_INFO } from "@/lib/legal-info";
 export const metadata = {
   title: "Entrega y pagos",
   description: "Cómo se entregan tus compras y qué métodos de pago aceptamos en The God Supplier.",
+  alternates: { canonical: "/envios-pagos" },
 };
 
 const UPDATED = "22 de septiembre de 2026";

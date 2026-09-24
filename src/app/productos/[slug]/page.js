@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getAllProducts, getProductBySlug } from "@/lib/products";
 import { formatPrice } from "@/lib/utils";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { SITE_URL } from "@/lib/site";
 
 export function generateStaticParams() {
   return getAllProducts().map((p) => ({ slug: p.slug }));
@@ -22,6 +23,11 @@ export async function generateMetadata({ params }) {
     openGraph: product.image
       ? { title: product.name, description: product.description, images: [product.image] }
       : { title: product.name, description: product.description },
+    // La URL "oficial" de esta ficha, para que Google no la confunda con
+    // ninguna otra forma de llegar a la misma página (por ejemplo, una
+    // URL de vista previa de un despliegue de Vercel) ni la trate como
+    // contenido duplicado.
+    alternates: { canonical: `/productos/${product.slug}` },
   };
 }
 
@@ -30,8 +36,40 @@ export default async function ProductoPage({ params }) {
   const product = getProductBySlug(slug);
   if (!product) notFound();
 
+  // Datos estructurados (JSON-LD): no cambian nada en lo que ve la
+  // persona, pero le dicen a Google explícitamente el precio, la moneda
+  // y que está disponible — es lo que a veces hace que un resultado de
+  // búsqueda muestre el precio directamente, sin tener que entrar. El
+  // precio se pasa como "9.90" (con punto, sin símbolo de moneda): así
+  // es como pide el precio el estándar Schema.org, nada que ver con
+  // `formatPrice` (que es solo para lo que ve la persona en pantalla).
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: product.image ? `${SITE_URL}${product.image}` : undefined,
+    category: product.category,
+    offers: {
+      "@type": "Offer",
+      url: `${SITE_URL}/productos/${product.slug}`,
+      priceCurrency: "EUR",
+      price: (product.price / 100).toFixed(2),
+      availability: "https://schema.org/InStock",
+    },
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-16">
+      {/* JSON-LD tiene que ir como texto plano dentro del script; no hay
+          forma de pasarlo como children normales de React sin que los
+          escape. El contenido sale de nuestro propio catálogo
+          (products.js), nunca de algo que escriba un usuario, así que no
+          hay riesgo de inyección pese a usar dangerouslySetInnerHTML. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <div className="grid gap-12 lg:grid-cols-2">
         {/* Igual que en la tarjeta del catálogo: foto real si existe
             (`image`), degradado de color si no. */}

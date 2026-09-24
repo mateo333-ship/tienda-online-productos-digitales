@@ -5,6 +5,7 @@ import { LEGAL_INFO } from "@/lib/legal-info";
 export const metadata = {
   title: "Términos y condiciones",
   description: "Condiciones de uso y de compra en The God Supplier.",
+  alternates: { canonical: "/terminos" },
 };
 
 const UPDATED = "22 de septiembre de 2026";

@@ -5,6 +5,7 @@ import { LEGAL_INFO } from "@/lib/legal-info";
 export const metadata = {
   title: "Política de privacidad",
   description: "Cómo tratamos tus datos personales en The God Supplier.",
+  alternates: { canonical: "/privacidad" },
 };
 
 const UPDATED = "22 de septiembre de 2026";

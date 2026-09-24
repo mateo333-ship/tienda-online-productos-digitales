@@ -5,6 +5,7 @@ import { LEGAL_INFO } from "@/lib/legal-info";
 export const metadata = {
   title: "Política de cookies",
   description: "Qué cookies usamos en The God Supplier y cómo puedes gestionarlas.",
+  alternates: { canonical: "/cookies" },
 };
 
 const UPDATED = "22 de septiembre de 2026";

@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/product-card";
 export const metadata = {
   title: "Catálogo",
   description: "Todos los cursos y ebooks digitales de The God Supplier, en un único catálogo.",
+  alternates: { canonical: "/productos" },
 };
 
 export default function CatalogoPage() {
