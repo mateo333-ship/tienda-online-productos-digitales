@@ -172,24 +172,31 @@ export async function deliverPaidOrder(order, buyerInfo, chargedTotal) {
  * abajo (`/api/webhooks/stripe`) hace lo mismo de forma fiable aunque el
  * cliente cierre la pestaña antes de volver, así que es el que manda si
  * alguna vez los dos no coincidieran.
+ *
+ * Devuelve el id del pedido si todo ha ido bien (o `null` si no), para
+ * que quien llame (ver cuenta/page.js) pueda pasarlo en la URL de vuelta
+ * y así saber luego, en el navegador, de qué pedido exacto avisar a
+ * Google Analytics como compra — ver components/purchase-event.js.
  */
 export async function confirmCheckoutSession(sessionId, userId) {
-  if (!isStripeConfigured() || !sessionId) return;
+  if (!isStripeConfigured() || !sessionId) return null;
   try {
     const stripe = getStripeClient();
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    if (session.payment_status !== "paid") return;
-    if (session.metadata?.userId !== userId) return; // sesión de otra cuenta: se ignora
+    if (session.payment_status !== "paid") return null;
+    if (session.metadata?.userId !== userId) return null; // sesión de otra cuenta: se ignora
 
     const orderId = session.metadata?.orderId;
-    if (!orderId) return;
+    if (!orderId) return null;
 
     const order = await findOrderById(orderId);
-    if (!order || order.userId !== userId) return;
+    if (!order || order.userId !== userId) return null;
 
     await deliverPaidOrder(order, extractBuyerInfoFromSession(session), session.amount_total);
+    return orderId;
   } catch (err) {
     console.error("[STRIPE] No se ha podido confirmar la sesión de pago:", err.message);
+    return null;
   }
 }

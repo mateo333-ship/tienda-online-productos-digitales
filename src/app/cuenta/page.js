@@ -5,6 +5,7 @@ import { confirmCheckoutSession } from "@/server/payments/stripe";
 import { getProductBySlug } from "@/lib/products";
 import { LogoutButton } from "./logout-button";
 import { OrdersList } from "./orders-list";
+import { PurchaseEvent } from "@/components/purchase-event";
 
 export const metadata = {
   title: "Mi cuenta",
@@ -24,8 +25,11 @@ export default async function CuentaPage({ searchParams }) {
   // de volver a cargar la página ya limpia, sin ese parámetro.
   const params = await searchParams;
   if (params?.session_id) {
-    await confirmCheckoutSession(params.session_id, user.id);
-    redirect("/cuenta?pago=exito");
+    const orderId = await confirmCheckoutSession(params.session_id, user.id);
+    // El id del pedido viaja en la propia URL de vuelta para que, ya en
+    // el navegador, sepamos de qué pedido exacto avisar a Google
+    // Analytics como compra (ver PurchaseEvent, más abajo).
+    redirect(`/cuenta?pago=exito${orderId ? `&pedido=${orderId}` : ""}`);
   }
   const paymentSuccess = params?.pago === "exito";
 
@@ -51,6 +55,16 @@ export default async function CuentaPage({ searchParams }) {
     })),
   }));
 
+  // Solo justo al volver de pagar de verdad con Stripe (nunca al abrir
+  // "Mi cuenta" sin más, ni si alguien recargase esta misma URL con un
+  // ?pedido= inventado) le avisamos a Google Analytics de esta compra en
+  // concreto. El modo demo (sin Stripe configurado) no pasa por aquí, así
+  // que tampoco genera compras falsas en Analytics.
+  const purchasedOrder =
+    paymentSuccess && params?.pedido
+      ? ordersWithAccess.find((o) => o.id === params.pedido && o.status === "pagado")
+      : null;
+
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
       {/* En móvil, un nombre largo puede partir "Hola, ..." en dos líneas;
@@ -69,6 +83,7 @@ export default async function CuentaPage({ searchParams }) {
           ¡Pago recibido correctamente! Ya tienes tu pedido guardado abajo.
         </div>
       )}
+      {purchasedOrder && <PurchaseEvent order={purchasedOrder} />}
 
       <section className="mt-12">
         <h2 className="text-lg font-medium">Tus pedidos</h2>
