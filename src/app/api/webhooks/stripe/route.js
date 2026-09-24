@@ -58,7 +58,7 @@ export async function POST(req) {
         // adelantó a este webhook, aquí simplemente no se hace nada más
         // (y sobre todo, no se manda el email de entrega dos veces).
         if (order && (!userId || order.userId === userId)) {
-          await deliverPaidOrder(order, extractBuyerInfoFromSession(session));
+          await deliverPaidOrder(order, extractBuyerInfoFromSession(session), session.amount_total);
         }
       }
     } else if (event.type === "checkout.session.async_payment_failed") {

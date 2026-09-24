@@ -145,6 +145,34 @@ Si defines `BREVO_API_KEY`, se usa Brevo y esta se ignora — no hace
 falta elegir una sola para siempre, puedes usar Brevo ahora y cambiar
 a Resend más adelante si compras un dominio.
 
+#### Si los emails llegan pero caen en spam o en Promociones
+
+Esto es distinto de que no lleguen: significa que sí se están
+enviando, pero Gmail/Yahoo no terminan de confiar del todo en quién
+los manda. La propia web ya ayuda a esto (cada email lleva también una
+versión en texto plano, no solo HTML con botones — un email
+"solo-HTML" es uno de los patrones que más empuja a Promociones) y
+responde con `Reply-To` a tu email de contacto real si lo has
+rellenado en `src/lib/legal-info.js`, pero la causa más habitual, con
+diferencia, es no tener un **dominio propio autenticado** (SPF + DKIM):
+
+- Verificar solo una dirección de email como remitente (Opción A tal
+  cual) es suficiente para que el email SE ENVÍE, pero Gmail no puede
+  comprobar del todo que ese remitente es de fiar, así que es más
+  conservador con dónde lo clasifica.
+- La solución real es autenticar un dominio propio: en Brevo, **Senders,
+  Domains & Dedicated IPs** → **Domains** → **Add a domain** (funciona
+  igual en el plan gratuito, no hace falta pagar); en Resend, el mismo
+  paso **Domains** → **Add Domain** de la Opción B. En ambos casos te dan
+  2-3 registros DNS (tipo TXT/CNAME) que añades donde compraste el
+  dominio — normalmente tardan de minutos a un par de horas en
+  verificarse. A partir de ahí, tus emails van firmados con DKIM y con
+  SPF a tu nombre, que es justo lo que hace que un proveedor de correo
+  confíe en la bandeja principal en vez de en spam/promociones.
+- Si no tienes dominio propio todavía, comprar uno (unos 10€/año) solo
+  para esto suele merecer la pena en cuanto la tienda tiene ventas de
+  verdad — es la mejora individual con más impacto en la entrega.
+
 Si algo sigue fallando: en Vercel, pestaña **Logs** de tu proyecto,
 verás el error real (todas las rutas de la API atrapan cualquier fallo
 inesperado y lo escriben ahí, en vez de dejar que el navegador reciba

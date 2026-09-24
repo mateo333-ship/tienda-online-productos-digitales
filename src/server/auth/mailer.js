@@ -1,5 +1,7 @@
 import "server-only";
 
+import { LEGAL_INFO } from "@/lib/legal-info";
+
 /**
  * ------------------------------------------------------------------
  *  Envío de emails (verificación de cuenta y entrega de compras)
@@ -33,13 +35,24 @@ const BREVO_FROM_NAME = process.env.BREVO_FROM_NAME || "The God Supplier";
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "The God Supplier <onboarding@resend.dev>";
 
+// Dirección a la que llegan las respuestas de un cliente que conteste al
+// email (por ejemplo, "no me ha llegado el acceso"). Sin esto, la
+// respuesta viaja al remitente tal cual (`BREVO_FROM_EMAIL` o el
+// `onboarding@resend.dev` de Resend, que no es una bandeja de nadie) y
+// se pierde para siempre. Solo se usa si `LEGAL_INFO.email` ya se ha
+// rellenado con una dirección real (ver src/lib/legal-info.js) — con el
+// valor de ejemplo entre corchetes, ni Brevo ni Resend lo aceptarían
+// como email válido, así que en ese caso simplemente no se manda.
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const REPLY_TO = EMAIL_REGEX.test(LEGAL_INFO.email) ? LEGAL_INFO.email : null;
+
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (c) => (
     { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
   ));
 }
 
-async function sendWithBrevo({ to, subject, html }) {
+async function sendWithBrevo({ to, subject, html, text }) {
   if (!BREVO_FROM_EMAIL) {
     throw new Error(
       "Falta BREVO_FROM_EMAIL: pon aquí la dirección que verificaste como remitente en Brevo."
@@ -58,6 +71,13 @@ async function sendWithBrevo({ to, subject, html }) {
       to: [{ email: to }],
       subject,
       htmlContent: html,
+      // Una versión en texto plano, además del HTML: sin ella, Gmail y
+      // otros webmails tratan el correo como si fuera puramente
+      // publicitario (ninguna newsletter manda solo texto plano) y es
+      // uno de los motivos más comunes por los que un email totalmente
+      // legítimo cae en la pestaña de Promociones o en spam.
+      textContent: text,
+      ...(REPLY_TO ? { replyTo: { email: REPLY_TO } } : {}),
     }),
   });
 
@@ -67,7 +87,7 @@ async function sendWithBrevo({ to, subject, html }) {
   }
 }
 
-async function sendWithResend({ to, subject, html }) {
+async function sendWithResend({ to, subject, html, text }) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -79,6 +99,8 @@ async function sendWithResend({ to, subject, html }) {
       to: [to],
       subject,
       html,
+      text,
+      ...(REPLY_TO ? { reply_to: REPLY_TO } : {}),
     }),
   });
 
@@ -91,17 +113,17 @@ async function sendWithResend({ to, subject, html }) {
 /** Envío genérico: intenta Brevo, si no Resend, y si ninguno está
  * configurado (o el envío real falla) deja constancia en los Logs como
  * red de seguridad, mediante `fallbackLog`. */
-async function sendEmail({ to, subject, html, fallbackLog }) {
+async function sendEmail({ to, subject, html, text, fallbackLog }) {
   if (BREVO_API_KEY) {
     try {
-      await sendWithBrevo({ to, subject, html });
+      await sendWithBrevo({ to, subject, html, text });
       return;
     } catch (err) {
       console.error("[MAIL] No se ha podido enviar por Brevo, sigo en modo demo:", err.message);
     }
   } else if (RESEND_API_KEY) {
     try {
-      await sendWithResend({ to, subject, html });
+      await sendWithResend({ to, subject, html, text });
       return;
     } catch (err) {
       console.error("[MAIL] No se ha podido enviar por Resend, sigo en modo demo:", err.message);
@@ -122,11 +144,16 @@ function verificationEmailHtml(code) {
   `;
 }
 
+function verificationEmailText(code) {
+  return `Verifica tu email\n\nTu código de verificación es: ${code}\n\nCaduca en 10 minutos. Si no has sido tú, ignora este mensaje.`;
+}
+
 export async function sendVerificationEmail(email, code) {
   await sendEmail({
     to: email,
     subject: "Tu código de verificación",
     html: verificationEmailHtml(code),
+    text: verificationEmailText(code),
     fallbackLog: `[MAIL DEMO] Código de verificación para ${email}: ${code}`,
   });
 }
@@ -175,12 +202,30 @@ function orderDeliveryEmailHtml({ toName, items }) {
   `;
 }
 
+function orderDeliveryEmailText({ toName, items }) {
+  const lines = items.map((item) =>
+    item.accessUrl
+      ? `- ${item.name}\n  Acceder: ${item.accessUrl}`
+      : `- ${item.name}\n  Estamos preparando tu acceso a este producto y te contactaremos en breve.`
+  );
+  return [
+    `¡Gracias por tu compra${toName ? `, ${toName}` : ""}!`,
+    "",
+    "Aquí tienes el acceso a lo que has comprado:",
+    "",
+    ...lines,
+    "",
+    "Si tienes cualquier problema para acceder, responde a este email y te ayudamos.",
+  ].join("\n");
+}
+
 export async function sendOrderDeliveryEmail({ toEmail, toName, items }) {
   const itemNames = items.map((i) => i.name).join(", ");
   await sendEmail({
     to: toEmail,
     subject: "Tu acceso a la compra en The God Supplier",
     html: orderDeliveryEmailHtml({ toName, items }),
+    text: orderDeliveryEmailText({ toName, items }),
     fallbackLog: `[MAIL DEMO] Email de entrega para ${toEmail} (${toName || "sin nombre"}): ${itemNames}`,
   });
 }

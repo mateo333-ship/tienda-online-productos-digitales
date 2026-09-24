@@ -80,15 +80,31 @@ export function extractBuyerInfoFromSession(session) {
  * otro camino se adelantó), no hace nada más — así nunca se manda el
  * email de entrega dos veces aunque el webhook y la vuelta del cliente
  * lleguen casi a la vez.
+ *
+ * `chargedTotal` (opcional) es el `amount_total` que Stripe devuelve en
+ * la propia Checkout Session, en céntimos: lo que el cliente ha pagado
+ * DE VERDAD, ya con cualquier código de descuento aplicado. `order.total`
+ * se calculó antes de crear esa sesión, así que si alguien usa un código
+ * válido (ver `allow_promotion_codes` en /api/checkout), sin esto el
+ * pedido se quedaría marcado con el precio de ANTES del descuento para
+ * siempre en "Mi cuenta" y en cualquier informe — no es un fallo de
+ * seguridad (a quien paga menos con un código real de Stripe se le debe
+ * cobrar menos), pero si no se actualiza aquí el importe guardado no
+ * coincidiría con lo que Stripe cobró de verdad.
  */
-export async function deliverPaidOrder(order, buyerInfo) {
+export async function deliverPaidOrder(order, buyerInfo, chargedTotal) {
   if (!order || order.status === "pagado") return;
 
   const finalBuyerInfo = buyerInfo
     ? { name: buyerInfo.name, email: buyerInfo.email, phone: buyerInfo.phone }
     : order.buyerInfo;
 
-  await setOrderStatus(order.id, "pagado", finalBuyerInfo ? { buyerInfo: finalBuyerInfo } : {});
+  const extra = finalBuyerInfo ? { buyerInfo: finalBuyerInfo } : {};
+  if (typeof chargedTotal === "number" && chargedTotal !== order.total) {
+    extra.total = chargedTotal;
+  }
+
+  await setOrderStatus(order.id, "pagado", extra);
   await clearCartForUser(order.userId);
 
   // El nombre (y el teléfono, si lo dio) se completan también en el
@@ -157,7 +173,7 @@ export async function confirmCheckoutSession(sessionId, userId) {
     const order = await findOrderById(orderId);
     if (!order || order.userId !== userId) return;
 
-    await deliverPaidOrder(order, extractBuyerInfoFromSession(session));
+    await deliverPaidOrder(order, extractBuyerInfoFromSession(session), session.amount_total);
   } catch (err) {
     console.error("[STRIPE] No se ha podido confirmar la sesión de pago:", err.message);
   }
