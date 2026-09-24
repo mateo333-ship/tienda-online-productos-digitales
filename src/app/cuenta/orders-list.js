@@ -109,8 +109,26 @@ export function OrdersList({ initialOrders }) {
           </ul>
           <div className="mt-3 flex items-center justify-between border-t border-[var(--border)] pt-3">
             <span className="font-medium">Total</span>
-            <span className="font-medium">{formatPrice(order.total)}</span>
+            {/* `originalTotal`/`discountAmount` solo existen cuando de
+                verdad se pagó menos de lo calculado al crear el pedido
+                (un código de descuento válido de Stripe) — ver
+                `deliverPaidOrder` en server/payments/stripe.js. Mismo
+                patrón visual que `compareAtPrice` en la ficha de
+                producto: precio de antes tachado + precio final. */}
+            <span className="flex items-baseline gap-2">
+              {typeof order.originalTotal === "number" && order.discountAmount > 0 && (
+                <span className="text-sm text-[var(--ink-soft)] line-through">
+                  {formatPrice(order.originalTotal)}
+                </span>
+              )}
+              <span className="font-medium">{formatPrice(order.total)}</span>
+            </span>
           </div>
+          {typeof order.originalTotal === "number" && order.discountAmount > 0 && (
+            <p className="mt-1 text-right text-xs text-[var(--accent)]">
+              Código de descuento aplicado: ahorraste {formatPrice(order.discountAmount)}.
+            </p>
+          )}
 
           {/* Un pedido "pagado" es el historial real de una compra (y la
               prueba de que se entregó el acceso): no se ofrece la opción

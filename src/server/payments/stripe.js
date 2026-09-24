@@ -91,6 +91,12 @@ export function extractBuyerInfoFromSession(session) {
  * seguridad (a quien paga menos con un código real de Stripe se le debe
  * cobrar menos), pero si no se actualiza aquí el importe guardado no
  * coincidiría con lo que Stripe cobró de verdad.
+ *
+ * Cuando hay descuento, no nos limitamos a sustituir el total: guardamos
+ * también `originalTotal` (el precio de antes) y `discountAmount` (lo
+ * ahorrado), para que "Mi cuenta" pueda enseñar el precio tachado junto
+ * al final — igual que ya se hace en la ficha de cada producto con
+ * `compareAtPrice` — en vez de solo un número distinto sin explicación.
  */
 export async function deliverPaidOrder(order, buyerInfo, chargedTotal) {
   if (!order || order.status === "pagado") return;
@@ -102,6 +108,15 @@ export async function deliverPaidOrder(order, buyerInfo, chargedTotal) {
   const extra = finalBuyerInfo ? { buyerInfo: finalBuyerInfo } : {};
   if (typeof chargedTotal === "number" && chargedTotal !== order.total) {
     extra.total = chargedTotal;
+    // Solo se guarda como "descuento" cuando se ha cobrado MENOS de lo
+    // calculado al crear el pedido (el caso real de un código de Stripe).
+    // Si por lo que sea Stripe cobrase más (p. ej. algún ajuste que no
+    // controlamos), simplemente se actualiza el total sin inventar un
+    // descuento negativo que no tendría sentido enseñar.
+    if (chargedTotal < order.total) {
+      extra.originalTotal = order.total;
+      extra.discountAmount = order.total - chargedTotal;
+    }
   }
 
   await setOrderStatus(order.id, "pagado", extra);
