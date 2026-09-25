@@ -2,7 +2,8 @@ import "./globals.css";
 import { CartProvider } from "@/components/cart-provider";
 import { LoadingProvider } from "@/components/loading-overlay";
 import { SessionProvider } from "@/components/session-provider";
-import { PromoBanner } from "@/components/promo-banner";
+import { CountdownBanner } from "@/components/countdown-banner";
+import { getLaunchCountdown } from "@/server/promo/countdown-repo";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { CookieConsentProvider } from "@/components/cookie-consent-provider";
@@ -71,7 +72,18 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  // Si por lo que sea no se pudiera leer/crear la cuenta atrás (fallo de
+  // conexión con la base de datos, por ejemplo), la web entera no debe
+  // dejar de funcionar por un banner de marketing: se registra el error
+  // y sencillamente no se muestra el banner esa vez.
+  let countdown = null;
+  try {
+    countdown = await getLaunchCountdown();
+  } catch (err) {
+    console.error("[COUNTDOWN] No se ha podido cargar la cuenta atrás de lanzamiento:", err.message);
+  }
+
   return (
     <html lang="es" className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans">
@@ -83,7 +95,9 @@ export default function RootLayout({ children }) {
           <LoadingProvider>
             <SessionProvider>
               <CartProvider>
-                <PromoBanner />
+                {countdown && (
+                  <CountdownBanner endsAt={countdown.endsAt} code={countdown.code} percent={countdown.percent} />
+                )}
                 <SiteHeader />
                 <main className="flex-1">{children}</main>
                 <SiteFooter />
